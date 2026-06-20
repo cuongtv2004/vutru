@@ -3,6 +3,14 @@
 Lịch sử các phần đã làm cho Hệ Mặt Trời 3D (mục tiêu: cho các bé học tập).
 Dựa trên ý tưởng từ [locphamnguyen/solar-system-3d](https://github.com/locphamnguyen/solar-system-3d).
 
+## Phase 12 — Tích hợp 5 hành tinh lùn vào mọi chế độ
+- **Guided tour**: thêm Ceres, Sao Diêm Vương, Haumea, Makemake, Eris vào cuối hành trình (9 → 14 chặng), đọc lời kể bằng file audio sẵn có.
+- **So sánh kích thước (📏)**: thêm 5 hành tinh lùn ở cuối hàng — bé thấy chúng tí xíu so với 8 hành tinh.
+- **Khoảng cách thật (🛰️)**: tách danh sách riêng cho chế độ khoảng cách; xếp hành tinh lùn theo đúng AU (Ceres trong vành đai; Sao Diêm Vương → Eris vượt xa Sao Hải Vương, trục kéo dài tới Eris ở 68 AU).
+- **Cân nặng của em (⚖️)**: thêm 5 hành tinh lùn (trọng lực bề mặt thật) — đứng đầu danh sách "nhẹ nhất" vì bé gần như không cân nặng gì trên chúng.
+- **Đố vui (🎯)**: thêm chủ đề **Hành tinh lùn** (5 câu hỏi song ngữ) + chip chọn chủ đề.
+- Cập nhật chú thích chế độ so sánh/khoảng cách; bổ sung kiểm thử (39 → 42 checks).
+
 ## Phase 0 — Nền tảng & cải tiến kỹ thuật
 - Gộp 2 file EN/VI thành **1 file** với i18n; nút đổi ngôn ngữ, mặc định tiếng Việt, nhớ lựa chọn (localStorage).
 - **Offline-first**: self-host Three.js + texture trong `assets/`, tự fallback CDN; `download-assets.sh` để tải.

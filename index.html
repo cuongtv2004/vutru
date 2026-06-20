@@ -169,6 +169,7 @@
         <button class="chip" type="button" data-topic="planet">Hành tinh</button>
         <button class="chip" type="button" data-topic="moon">Mặt trăng</button>
         <button class="chip" type="button" data-topic="size">Kích thước</button>
+        <button class="chip" type="button" data-topic="dwarf">Hành tinh lùn</button>
       </div>
       <div id="countChips" class="chips">
         <button class="chip" type="button" data-count="6">6</button>
@@ -274,13 +275,13 @@ const I18N = {
       quizStart:'🎯 Đố vui', quizCorrect:'Chính xác! 🎉', quizWrong:'Chưa đúng rồi 😅', quizReplay:'Chơi lại', quizClose:'Đóng',
       quizMeta:(i,n,s)=>'Câu '+i+'/'+n+' · Điểm: '+s, quizResult:(s,n)=>'Bé trả lời đúng '+s+'/'+n+' câu!',
       quizSetupTitle:'Chọn chủ đề & số câu', quizBegin:'Bắt đầu',
-      topicAll:'Tất cả', topicPlanet:'Hành tinh', topicMoon:'Mặt trăng', topicSize:'Kích thước',
+      topicAll:'Tất cả', topicPlanet:'Hành tinh', topicMoon:'Mặt trăng', topicSize:'Kích thước', topicDwarf:'Hành tinh lùn',
       quizBest:(s,t,p)=>'🏆 Kỷ lục: '+s+'/'+t+' ('+p+'%)', quizNoBest:'🏆 Chưa có kỷ lục — chơi thử nào!', quizNewRecord:'🎉 Kỷ lục mới!',
       compareStart:'📏 So sánh kích thước',
-      compareCap:'Kích thước thật của các hành tinh so với nhau · ☀️ Mặt Trời còn to hơn Sao Mộc khoảng 10 lần nữa!',
+      compareCap:'Kích thước thật của các hành tinh so với nhau · 🔵 5 hành tinh lùn bé xíu ở cuối hàng · ☀️ Mặt Trời còn to hơn Sao Mộc khoảng 10 lần nữa!',
       shareCopied:'Đã chép liên kết! 🔗',
       distanceStart:'🛰️ Khoảng cách thật',
-      distanceCap:'Khoảng cách thật từ Mặt Trời (theo AU) · Sao Hải Vương xa tới 30 AU! · 🪐 Kích thước KHÔNG theo tỉ lệ.',
+      distanceCap:'Khoảng cách thật từ Mặt Trời (theo AU) · Sao Hải Vương xa 30 AU, mà Eris còn xa hơn gấp đôi (68 AU)! · 🪐 Kích thước KHÔNG theo tỉ lệ.',
       distAU:au=>au.toString().replace('.', ',')+' AU',
       loading:'Đang tải vũ trụ…',
       nwTitle:'Trình duyệt không hỗ trợ 3D',
@@ -327,13 +328,13 @@ const I18N = {
       quizStart:'🎯 Quiz', quizCorrect:'Correct! 🎉', quizWrong:'Not quite 😅', quizReplay:'Play again', quizClose:'Close',
       quizMeta:(i,n,s)=>'Q '+i+'/'+n+' · Score: '+s, quizResult:(s,n)=>'You got '+s+'/'+n+' right!',
       quizSetupTitle:'Choose topic & length', quizBegin:'Start',
-      topicAll:'All', topicPlanet:'Planets', topicMoon:'Moons', topicSize:'Sizes',
+      topicAll:'All', topicPlanet:'Planets', topicMoon:'Moons', topicSize:'Sizes', topicDwarf:'Dwarf planets',
       quizBest:(s,t,p)=>'🏆 Best: '+s+'/'+t+' ('+p+'%)', quizNoBest:'🏆 No record yet — give it a go!', quizNewRecord:'🎉 New record!',
       compareStart:'📏 Size comparison',
-      compareCap:'True sizes of the planets next to each other · ☀️ The Sun is about 10× bigger than Jupiter!',
+      compareCap:'True sizes of the planets next to each other · 🔵 5 tiny dwarf planets at the end of the row · ☀️ The Sun is about 10× bigger than Jupiter!',
       shareCopied:'Link copied! 🔗',
       distanceStart:'🛰️ Real distances',
-      distanceCap:'True distances from the Sun (in AU) · Neptune is 30 AU away! · 🪐 Sizes are NOT to scale.',
+      distanceCap:'True distances from the Sun (in AU) · Neptune is 30 AU away, and Eris is more than twice as far (68 AU)! · 🪐 Sizes are NOT to scale.',
       distAU:au=>au+' AU',
       loading:'Loading the universe…',
       nwTitle:'Your browser does not support 3D',
@@ -453,11 +454,18 @@ const QUIZ = [
   {answer:'io',       cat:'moon', q:{vi:'Vệ tinh nào có nhiều NÚI LỬA nhất?', en:'Which moon has the most VOLCANOES?'}},
   {answer:'europa',   cat:'moon', q:{vi:'Vệ tinh nào có ĐẠI DƯƠNG ngầm dưới lớp băng?', en:'Which moon has a hidden OCEAN under ice?'}},
   {answer:'titan',    cat:'moon', q:{vi:'Vệ tinh nào có KHÍ QUYỂN dày và hồ methane?', en:'Which moon has a thick ATMOSPHERE and methane lakes?'}},
-  {answer:'triton',   cat:'moon', q:{vi:'Vệ tinh nào của Sao Hải Vương quay NGƯỢC chiều?', en:"Which of Neptune's moons orbits BACKWARDS?"}}
+  {answer:'triton',   cat:'moon', q:{vi:'Vệ tinh nào của Sao Hải Vương quay NGƯỢC chiều?', en:"Which of Neptune's moons orbits BACKWARDS?"}},
+  // --- Hành tinh lùn ---
+  {answer:'pluto',    cat:'dwarf', q:{vi:'Hành tinh lùn nào từng được coi là hành tinh thứ 9?', en:'Which dwarf planet was once counted as the 9th planet?'}},
+  {answer:'ceres',    cat:'dwarf', q:{vi:'Hành tinh lùn nào nằm trong VÀNH ĐAI tiểu hành tinh?', en:'Which dwarf planet lives in the asteroid BELT?'}},
+  {answer:'eris',     cat:'dwarf', q:{vi:'Hành tinh lùn nào NẶNG nhất đã biết?', en:'Which is the most MASSIVE known dwarf planet?'}},
+  {answer:'haumea',   cat:'dwarf', q:{vi:'Hành tinh lùn nào có hình QUẢ TRỨNG do quay rất nhanh?', en:'Which dwarf planet is EGG-shaped from spinning fast?'}},
+  {answer:'makemake', cat:'dwarf', q:{vi:'Hành tinh lùn nào được đặt tên theo thần của đảo Phục Sinh?', en:'Which dwarf planet is named after an Easter Island god?'}}
 ];
 
 // Trọng lực bề mặt so với Trái Đất (g = 1) — để tính cân nặng của bé trên mỗi thiên thể
-const GRAV = {sun:27.0, mercury:0.38, venus:0.91, earth:1.0, moon:0.17, mars:0.38, jupiter:2.53, saturn:1.07, uranus:0.89, neptune:1.14};
+const GRAV = {sun:27.0, mercury:0.38, venus:0.91, earth:1.0, moon:0.17, mars:0.38, jupiter:2.53, saturn:1.07, uranus:0.89, neptune:1.14,
+  ceres:0.03, pluto:0.06, charon:0.03, haumea:0.04, makemake:0.05, eris:0.08};
 </script>
 
 <!-- Three.js: local first, CDN fallback -->
@@ -692,8 +700,9 @@ function boot(){
   scene.add(beltGroup);
 
   // ---- size-comparison view: 8 planets at TRUE relative sizes, in a row ----
-  const TRUE_R = {mercury:2440, venus:6052, earth:6371, mars:3390, jupiter:69911, saturn:58232, uranus:25362, neptune:24622};
-  const compareOrder = ['mercury','venus','earth','mars','jupiter','saturn','uranus','neptune'];
+  const TRUE_R = {mercury:2440, venus:6052, earth:6371, mars:3390, jupiter:69911, saturn:58232, uranus:25362, neptune:24622,
+    ceres:470, pluto:1188, haumea:780, makemake:715, eris:1163};
+  const compareOrder = ['mercury','venus','earth','mars','jupiter','saturn','uranus','neptune','ceres','pluto','haumea','makemake','eris'];
   const CMP_F = 5 / TRUE_R.jupiter; // Jupiter -> 5 units
   const compareGroup = new THREE.Group();
   compareGroup.visible = false;
@@ -725,9 +734,12 @@ function boot(){
   scene.add(compareGroup);
 
   // ---- real-distance view: Sun + 8 planets spaced by TRUE distance (AU) ----
-  const AU = {mercury:0.39, venus:0.72, earth:1, mars:1.52, jupiter:5.2, saturn:9.5, uranus:19.2, neptune:30};
-  const DIST_F = 4;                       // 4 units / AU  -> Neptune ở x=120
-  const distEndX = AU.neptune * DIST_F;
+  const AU = {mercury:0.39, venus:0.72, earth:1, mars:1.52, jupiter:5.2, saturn:9.5, uranus:19.2, neptune:30,
+    ceres:2.77, pluto:39.5, haumea:43, makemake:45.8, eris:68};
+  // ordered by real distance: dwarf planets slot in by their AU (Ceres in the belt; Pluto+ beyond Neptune)
+  const distanceOrder = ['mercury','venus','earth','mars','ceres','jupiter','saturn','uranus','neptune','pluto','haumea','makemake','eris'];
+  const DIST_F = 4;                       // 4 units / AU  -> Eris ở x=272
+  const distEndX = AU.eris * DIST_F;
   const distCenterX = distEndX / 2;
   const distanceGroup = new THREE.Group();
   distanceGroup.visible = false;
@@ -740,7 +752,7 @@ function boot(){
   const distSun = new THREE.Mesh(new THREE.SphereGeometry(2.6, 32, 24), byId.sun.mesh.material);
   distanceGroup.add(distSun);
   distanceItems.push({id:'sun', mesh:distSun, au:0, label:null});
-  for (const id of compareOrder){
+  for (const id of distanceOrder){
     const mesh = new THREE.Mesh(new THREE.SphereGeometry(1.1, 28, 20), byId[id].mesh.material);
     mesh.position.set(AU[id]*DIST_F, 0, 0);
     distanceGroup.add(mesh);
@@ -833,6 +845,7 @@ function boot(){
     document.querySelector('#topicChips .chip[data-topic="planet"]').textContent = u.topicPlanet;
     document.querySelector('#topicChips .chip[data-topic="moon"]').textContent = u.topicMoon;
     document.querySelector('#topicChips .chip[data-topic="size"]').textContent = u.topicSize;
+    document.querySelector('#topicChips .chip[data-topic="dwarf"]').textContent = u.topicDwarf;
     if (quizActive) showQuestion();
     if (document.getElementById('quizSetup').classList.contains('on')) document.getElementById('quizBestLine').textContent = bestLineText();
     if (document.getElementById('quizResult').classList.contains('on')) document.getElementById('quizResultTxt').textContent = u.quizResult(score, quizSet.length);
@@ -945,7 +958,7 @@ function boot(){
 
   // ---- Guided tour + narration ----
   let narrate = false, touring = false, tourPaused = false, tourIdx = 0, tourTimer = null;
-  const tourOrder = ['sun','mercury','venus','earth','mars','jupiter','saturn','uranus','neptune'];
+  const tourOrder = ['sun','mercury','venus','earth','mars','jupiter','saturn','uranus','neptune','ceres','pluto','haumea','makemake','eris'];
   const tourBar = document.getElementById('tourBar');
   const tourPlayBtn = document.getElementById('tourPlay');
   const tourPosEl = document.getElementById('tourPos');
@@ -1222,7 +1235,7 @@ function boot(){
   distanceBtn.addEventListener('click', () => setDistance(!distanceMode));
 
   // ---- "Cân nặng của em trên các thiên thể" ----
-  const weightBody = ['moon','mercury','mars','uranus','venus','earth','saturn','neptune','jupiter','sun']; // tăng dần theo trọng lực
+  const weightBody = ['ceres','haumea','makemake','pluto','eris','moon','mercury','mars','uranus','venus','earth','saturn','neptune','jupiter','sun']; // tăng dần theo trọng lực
   const weightPanel = document.getElementById('weightPanel');
   const weightInput = document.getElementById('weightInput');
   function renderWeights(){
