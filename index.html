@@ -106,22 +106,25 @@
   #distanceBtn.active { box-shadow:0 0 0 2px #6fb3f0, 0 0 12px rgba(111,179,240,0.6); }
   #phaseBtn { width:100%; margin:6px 0 2px; padding:8px; font-size:12px; font-weight:bold; color:#1a1224; background:linear-gradient(90deg,#c9b6e6,#e8d6ff); border:none; border-radius:8px; cursor:pointer; font-family:inherit; }
   #phaseBtn:hover { filter:brightness(1.08); }
+  #seasonBtn { width:100%; margin:6px 0 2px; padding:8px; font-size:12px; font-weight:bold; color:#08200f; background:linear-gradient(90deg,#7fd6a0,#bff0cf); border:none; border-radius:8px; cursor:pointer; font-family:inherit; }
+  #seasonBtn:hover { filter:brightness(1.08); }
   #constBtn { width:100%; margin:6px 0 2px; padding:8px; font-size:12px; font-weight:bold; color:#0c1430; background:linear-gradient(90deg,#8fa6f0,#c2d0ff); border:none; border-radius:8px; cursor:pointer; font-family:inherit; }
   #constBtn:hover { filter:brightness(1.08); }
   #constBtn.active { box-shadow:0 0 0 2px #8fa6f0, 0 0 12px rgba(143,166,240,0.6); }
   .const-label { position:absolute; font-size:12px; font-weight:bold; color:#e6edff; text-shadow:0 0 7px rgba(110,168,224,0.95), 0 0 2px #000; transform:translate(-50%,-100%); white-space:nowrap; pointer-events:none; }
-  /* Phase & eclipse mini-scene */
-  #phasePanel { position:absolute; inset:0; z-index:55; display:none; align-items:center; justify-content:center; background:rgba(4,6,12,0.78); padding:12px; }
-  #phasePanel.on { display:flex; }
+  /* Phase & eclipse / seasons mini-scenes (shared) */
+  #phasePanel, #seasonPanel { position:absolute; inset:0; z-index:55; display:none; align-items:center; justify-content:center; background:rgba(4,6,12,0.78); padding:12px; }
+  #phasePanel.on, #seasonPanel.on { display:flex; }
   .phase-card { max-width:min(94vw,560px); width:560px; }
-  #phaseCanvas { width:100%; height:300px; display:block; border-radius:12px; background:#03050c; margin-bottom:10px; }
-  #phaseReadout { display:flex; align-items:center; justify-content:center; gap:10px; font-size:18px; color:#eef2fb; font-weight:bold; }
-  #phaseEmoji { font-size:30px; line-height:1; }
-  #phaseEvent { min-height:20px; margin:7px 0 2px; font-size:13px; font-weight:bold; color:#ffd877; }
-  #phaseControls { display:flex; align-items:center; gap:12px; margin:10px 4px 4px; }
-  #phaseControls input[type=range] { flex:1; }
-  #phasePlay { width:36px; height:30px; padding:0; font-size:12px; line-height:1; color:#dfe6f5; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.3); border-radius:6px; cursor:pointer; font-family:inherit; flex:none; }
-  #phaseCaption { font-size:12px; color:#9aa6c2; line-height:1.55; margin:8px 2px 14px; }
+  #phaseCanvas, #seasonCanvas { width:100%; height:300px; display:block; border-radius:12px; background:#03050c; margin-bottom:10px; }
+  #phaseReadout, #seasonReadout { display:flex; align-items:center; justify-content:center; gap:10px; font-size:18px; color:#eef2fb; font-weight:bold; }
+  #phaseEmoji, #seasonEmoji { font-size:30px; line-height:1; }
+  #phaseEvent, #seasonNote { min-height:20px; margin:7px 0 2px; font-size:13px; font-weight:bold; color:#ffd877; }
+  #seasonNote { color:#bfe6cf; }
+  #phaseControls, #seasonControls { display:flex; align-items:center; gap:12px; margin:10px 4px 4px; }
+  #phaseControls input[type=range], #seasonControls input[type=range] { flex:1; }
+  #phasePlay, #seasonPlay { width:36px; height:30px; padding:0; font-size:12px; line-height:1; color:#dfe6f5; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.3); border-radius:6px; cursor:pointer; font-family:inherit; flex:none; }
+  #phaseCaption, #seasonCaption { font-size:12px; color:#9aa6c2; line-height:1.55; margin:8px 2px 14px; }
   /* Accessibility */
   .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
   button:focus-visible, [tabindex]:focus-visible, input:focus-visible { outline:3px solid #ffd877; outline-offset:2px; }
@@ -150,6 +153,7 @@
     <button id="weightBtn" type="button">⚖️ Cân nặng của em</button>
     <button id="phaseBtn" type="button">🌗 Pha &amp; Nhật/Nguyệt thực</button>
     <button id="constBtn" type="button" aria-pressed="false">✨ Chòm sao</button>
+    <button id="seasonBtn" type="button">🌍 Ngày/đêm & mùa</button>
     <div class="lbl-sec" id="uiSimDate" style="margin-top:8px;">NGÀY MÔ PHỎNG</div>
     <div id="simDate" style="font-size:13px;color:#dfe6f5;margin-bottom:10px;">—</div>
     <div class="lbl-sec" id="uiTime">ĐIỀU KHIỂN THỜI GIAN</div>
@@ -247,6 +251,21 @@
     </div>
   </div>
 
+  <div id="seasonPanel">
+    <div class="quiz-card phase-card">
+      <div id="seasonTitle" class="quiz-card-title">Ngày/đêm &amp; các mùa</div>
+      <canvas id="seasonCanvas" width="560" height="300"></canvas>
+      <div id="seasonReadout"><span id="seasonEmoji">🌍</span><span id="seasonName"></span></div>
+      <div id="seasonNote"></div>
+      <div id="seasonControls">
+        <button id="seasonPlay" type="button" aria-label="Tạm dừng">❚❚</button>
+        <input type="range" id="seasonSlider" min="0" max="360" step="1" value="0" aria-label="Thời điểm trong năm (vị trí Trái Đất trên quỹ đạo)" />
+      </div>
+      <div id="seasonCaption"></div>
+      <button id="seasonClose" type="button">Đóng</button>
+    </div>
+  </div>
+
   <div id="tourBar">
     <button id="tourPrev" aria-label="Trước">◀</button>
     <button id="tourPlay" aria-label="Tạm dừng tour">❚❚</button>
@@ -322,6 +341,10 @@ const I18N = {
       phaseCaption:'Kéo thanh trượt để Mặt Trăng đi quanh Trái Đất — phần được Mặt Trời chiếu sáng đổi dần tạo ra các pha. Khi ba thiên thể thẳng hàng sẽ có nhật thực (Trăng non) hoặc nguyệt thực (Trăng tròn). Ngoài đời quỹ đạo Mặt Trăng hơi nghiêng nên thực không xảy ra mỗi tháng.',
       phaseNames:{new:'Trăng non',waxcres:'Trăng lưỡi liềm đầu tháng',firstq:'Trăng bán nguyệt đầu tháng',waxgib:'Trăng khuyết đầu tháng',full:'Trăng tròn',wangib:'Trăng khuyết cuối tháng',lastq:'Trăng bán nguyệt cuối tháng',wancres:'Trăng lưỡi liềm cuối tháng'},
       phaseSolar:'🌑 Nhật thực — Mặt Trăng che Mặt Trời!', phaseLunar:'🔴 Nguyệt thực — Trái Đất che Mặt Trăng!', phaseNone:'',
+      seasonStart:'🌍 Ngày/đêm & mùa', seasonTitle:'Ngày/đêm & các mùa', seasonClose:'Đóng',
+      seasonCaption:'Trục Trái Đất nghiêng 23,5° và luôn chỉ về một hướng. Kéo thanh trượt để Trái Đất đi quanh Mặt Trời: nửa cầu nào nghiêng về phía Mặt Trời thì đang là mùa hè (ngày dài hơn). Trái Đất tự quay tạo ra ngày và đêm.',
+      seasonNames:{spring:'Mùa Xuân',summer:'Mùa Hè',autumn:'Mùa Thu',winter:'Mùa Đông'},
+      seasonNorth:'Bắc bán cầu', seasonNote:'🔁 Nam bán cầu thì ngược lại.',
       quizStart:'🎯 Đố vui', quizCorrect:'Chính xác! 🎉', quizWrong:'Chưa đúng rồi 😅', quizReplay:'Chơi lại', quizClose:'Đóng',
       quizMeta:(i,n,s)=>'Câu '+i+'/'+n+' · Điểm: '+s, quizResult:(s,n)=>'Bé trả lời đúng '+s+'/'+n+' câu!',
       quizSetupTitle:'Chọn chủ đề & số câu', quizBegin:'Bắt đầu',
@@ -382,6 +405,10 @@ const I18N = {
       phaseCaption:'Drag the slider to move the Moon around Earth — the sunlit part you see changes, making the phases. When all three line up you get a solar eclipse (New Moon) or lunar eclipse (Full Moon). In real life the Moon\'s orbit is slightly tilted, so eclipses don\'t happen every month.',
       phaseNames:{new:'New Moon',waxcres:'Waxing crescent',firstq:'First quarter',waxgib:'Waxing gibbous',full:'Full Moon',wangib:'Waning gibbous',lastq:'Last quarter',wancres:'Waning crescent'},
       phaseSolar:'🌑 Solar eclipse — the Moon covers the Sun!', phaseLunar:'🔴 Lunar eclipse — Earth\'s shadow covers the Moon!', phaseNone:'',
+      seasonStart:'🌍 Day/night & seasons', seasonTitle:'Day/Night & the Seasons', seasonClose:'Close',
+      seasonCaption:'Earth\'s axis is tilted 23.5° and always points the same way. Drag the slider to move Earth around the Sun: whichever hemisphere leans toward the Sun is having summer (longer days). Earth\'s spin makes day and night.',
+      seasonNames:{spring:'Spring',summer:'Summer',autumn:'Autumn',winter:'Winter'},
+      seasonNorth:'Northern hemisphere', seasonNote:'🔁 The Southern hemisphere is opposite.',
       quizStart:'🎯 Quiz', quizCorrect:'Correct! 🎉', quizWrong:'Not quite 😅', quizReplay:'Play again', quizClose:'Close',
       quizMeta:(i,n,s)=>'Q '+i+'/'+n+' · Score: '+s, quizResult:(s,n)=>'You got '+s+'/'+n+' right!',
       quizSetupTitle:'Choose topic & length', quizBegin:'Start',
@@ -1008,6 +1035,11 @@ function boot(){
     document.getElementById('phaseCaption').textContent = u.phaseCaption;
     document.getElementById('phaseClose').textContent = u.phaseClose;
     if (typeof updatePhaseReadout === 'function') updatePhaseReadout();
+    document.getElementById('seasonBtn').textContent = u.seasonStart;
+    document.getElementById('seasonTitle').textContent = u.seasonTitle;
+    document.getElementById('seasonCaption').textContent = u.seasonCaption;
+    document.getElementById('seasonClose').textContent = u.seasonClose;
+    if (typeof updateSeasonReadout === 'function') updateSeasonReadout();
     document.getElementById('spdOut').textContent = u.speed(speed);
     document.getElementById('loadTxt').textContent = u.loading;
     document.getElementById('nwTitle').textContent = u.nwTitle;
@@ -1034,6 +1066,7 @@ function boot(){
     else if (typeof distanceMode !== 'undefined' && distanceMode) params.set('view', 'distance');
     else if (typeof phaseMode !== 'undefined' && phaseMode) params.set('view', 'phase');
     else if (typeof constMode !== 'undefined' && constMode) params.set('view', 'constellations');
+    else if (typeof seasonMode !== 'undefined' && seasonMode) params.set('view', 'seasons');
     history.replaceState(null, '', location.pathname + '?' + params.toString());
   }
   document.getElementById('shareBtn').addEventListener('click', () => {
@@ -1174,7 +1207,7 @@ function boot(){
     scheduleNext(willPlay ? 15000 : 7500);
   }
   function startTour(){
-    closeQuiz(); setCompare(false); setDistance(false); closePhase(); closeConst();
+    closeQuiz(); setCompare(false); setDistance(false); closePhase(); closeConst(); closeSeason();
     touring = true; tourPaused = false;
     tourBar.classList.add('on');
     tourPlayBtn.textContent = '❚❚';
@@ -1274,7 +1307,7 @@ function boot(){
     document.querySelectorAll('#modeChips .chip').forEach(c => c.classList.toggle('active', (c.dataset.timed === '1') === quizTimed));
   }
   function openQuizSetup(){
-    stopTour(); setCompare(false); setDistance(false); closeQuiz(); closePhase(); closeConst();
+    stopTour(); setCompare(false); setDistance(false); closeQuiz(); closePhase(); closeConst(); closeSeason();
     document.getElementById('quizBestLine').textContent = bestLineText();
     syncSetupUI();
     document.getElementById('quizSetup').classList.add('on');
@@ -1349,7 +1382,7 @@ function boot(){
     if (on === compareMode) return;
     compareMode = on;
     if (on){
-      stopTour(); closeQuiz(); setDistance(false); closePhase(); closeConst();
+      stopTour(); closeQuiz(); setDistance(false); closePhase(); closeConst(); closeSeason();
       savedCam = {theta:camTheta, phi:camPhi, dist:targetDist};
       for (const b of bodies){ b.mesh.visible = false; if (b.orbitLine) b.orbitLine.visible = false; }
       beltGroup.visible = false;
@@ -1385,7 +1418,7 @@ function boot(){
     if (on === distanceMode) return;
     distanceMode = on;
     if (on){
-      stopTour(); closeQuiz(); setCompare(false); closePhase(); closeConst();
+      stopTour(); closeQuiz(); setCompare(false); closePhase(); closeConst(); closeSeason();
       savedCamD = {theta:camTheta, phi:camPhi, dist:targetDist};
       for (const b of bodies){ b.mesh.visible = false; if (b.orbitLine) b.orbitLine.visible = false; }
       beltGroup.visible = false;
@@ -1420,7 +1453,7 @@ function boot(){
     if (on === constMode) return;
     constMode = on;
     if (on){
-      stopTour(); closeQuiz(); setCompare(false); setDistance(false); closePhase(); closeWeight();
+      stopTour(); closeQuiz(); setCompare(false); setDistance(false); closePhase(); closeWeight(); closeSeason();
       savedCamC = {theta:camTheta, phi:camPhi, dist:targetDist};
       for (const b of bodies){ b.mesh.visible = false; if (b.orbitLine) b.orbitLine.visible = false; }
       beltGroup.visible = false;
@@ -1470,7 +1503,7 @@ function boot(){
     }
   }
   function openWeight(){
-    stopTour(); closePhase(); closeConst();
+    stopTour(); closePhase(); closeConst(); closeSeason();
     document.getElementById('quizSetup').classList.remove('on');
     document.getElementById('quizResult').classList.remove('on');
     renderWeights();
@@ -1582,7 +1615,7 @@ function boot(){
     if (on === phaseMode) return;
     phaseMode = on;
     if (on){
-      stopTour(); closeQuiz(); setCompare(false); setDistance(false); closeWeight(); closeConst();
+      stopTour(); closeQuiz(); setCompare(false); setDistance(false); closeWeight(); closeConst(); closeSeason();
       initPhaseScene(); sizePhaseRenderer();
       if (reduceMotion) phasePlaying = false;
       syncPhasePlayBtn(); updatePhaseReadout();
@@ -1603,13 +1636,125 @@ function boot(){
   phasePlayBtn.addEventListener('click', () => { phasePlaying = !phasePlaying; phaseLastT = null; syncPhasePlayBtn(); });
   window.addEventListener('resize', () => { if (phaseMode) sizePhaseRenderer(); });
 
+  // ---- Day/night & seasons mini-scene (self-contained renderer) ----
+  const SEASON_RO = 7.2, SEASON_TILT = 23.5 * Math.PI / 180;   // orbit radius, axial tilt
+  let seasonMode = false, seasonAngle = 0, seasonPlaying = !reduceMotion;
+  let seasonInited = false, seasonRAF = null, seasonLastT = null, seasonSpin = 0;
+  let sScene, sCam, sRenderer, sEarthOrbit, sEarthTilt, sEarth;
+  const seasonPanel = document.getElementById('seasonPanel');
+  const seasonCanvas = document.getElementById('seasonCanvas');
+  const seasonSlider = document.getElementById('seasonSlider');
+  const seasonPlayBtn = document.getElementById('seasonPlay');
+
+  // Trục nghiêng cố định về hướng -X. θ=0: Trái Đất ở +X, Mặt Trời ở hướng -X →
+  // cực Bắc nghiêng VỀ phía Mặt Trời → Bắc bán cầu mùa hè (θ=180 thì ngược lại = mùa đông).
+  function seasonKey(deg){
+    const a = ((deg % 360) + 360) % 360;
+    if (a < 45 || a >= 315) return 'summer';
+    if (a < 135) return 'autumn';
+    if (a < 225) return 'winter';
+    return 'spring';
+  }
+  function updateSeasonReadout(){
+    if (!seasonMode) return;
+    const u = T().ui;
+    document.getElementById('seasonName').textContent = u.seasonNorth + ': ' + u.seasonNames[seasonKey(seasonAngle)];
+    document.getElementById('seasonNote').textContent = u.seasonNote;
+  }
+  function syncSeasonPlayBtn(){
+    seasonPlayBtn.textContent = seasonPlaying ? '❚❚' : '▶';
+    seasonPlayBtn.setAttribute('aria-label', seasonPlaying ? (lang === 'vi' ? 'Tạm dừng' : 'Pause') : (lang === 'vi' ? 'Chạy' : 'Play'));
+  }
+
+  function initSeasonScene(){
+    if (seasonInited) return;
+    seasonInited = true;
+    sRenderer = new THREE.WebGLRenderer({canvas:seasonCanvas, antialias:true});
+    sRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    sScene = new THREE.Scene();
+    sCam = new THREE.PerspectiveCamera(42, 16/10, 0.1, 200);
+    sCam.position.set(0, 8.5, 12.5); sCam.lookAt(0, 0, 0);
+    sScene.add(new THREE.AmbientLight(0x2a3550, 0.45));
+    sScene.add(new THREE.PointLight(0xfff4d6, 2.2, 0, 1.4));   // Sun at centre lights the near hemisphere
+    // Sun marker + glow at centre
+    sScene.add(new THREE.Mesh(new THREE.SphereGeometry(1.5, 28, 20), new THREE.MeshBasicMaterial({color:0xffd24a})));
+    sScene.add(new THREE.Mesh(new THREE.SphereGeometry(2.2, 28, 20), new THREE.MeshBasicMaterial({color:0xffd877, transparent:true, opacity:0.18, blending:THREE.AdditiveBlending, depthWrite:false})));
+    // orbit ring
+    const ring = new THREE.Mesh(new THREE.RingGeometry(SEASON_RO - 0.03, SEASON_RO + 0.03, 100), new THREE.MeshBasicMaterial({color:0x39466e, side:THREE.DoubleSide, transparent:true, opacity:0.5}));
+    ring.rotation.x = Math.PI/2; sScene.add(ring);
+    // solstice/equinox marker dots
+    for (let k = 0; k < 4; k++){
+      const m = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 10), new THREE.MeshBasicMaterial({color:0x8aa0d0}));
+      m.position.set(Math.cos(k*Math.PI/2)*SEASON_RO, 0, Math.sin(k*Math.PI/2)*SEASON_RO);
+      sScene.add(m);
+    }
+    // Earth: orbit-positioned group -> fixed-direction tilt group -> spinning Earth
+    sEarthOrbit = new THREE.Group(); sScene.add(sEarthOrbit);
+    sEarthTilt = new THREE.Group(); sEarthTilt.rotation.z = SEASON_TILT; sEarthOrbit.add(sEarthTilt);
+    sEarth = new THREE.Mesh(new THREE.SphereGeometry(1.15, 48, 36), new THREE.MeshPhongMaterial({color:0x2a6bd6, emissive:0x07101f, shininess:10}));
+    sEarthTilt.add(sEarth);
+    sEarthTilt.add(new THREE.Mesh(new THREE.SphereGeometry(1.15*1.07, 28, 22), new THREE.MeshBasicMaterial({color:0x6fa8e0, transparent:true, opacity:0.16, side:THREE.BackSide, blending:THREE.AdditiveBlending, depthWrite:false})));
+    // visible rotation axis through the poles
+    sEarthTilt.add(new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,-1.9,0), new THREE.Vector3(0,1.9,0)]),
+      new THREE.LineBasicMaterial({color:0xffd877, transparent:true, opacity:0.85})));
+  }
+  function sizeSeasonRenderer(){
+    if (!seasonInited) return;
+    const w = seasonCanvas.clientWidth || 560, h = seasonCanvas.clientHeight || 300;
+    sRenderer.setSize(w, h, false);
+    sCam.aspect = w / h; sCam.updateProjectionMatrix();
+  }
+  function seasonFrame(t){
+    if (!seasonMode) return;
+    if (seasonLastT === null) seasonLastT = t;
+    const dt = Math.min((t - seasonLastT) / 1000, 0.1); seasonLastT = t;
+    if (seasonPlaying){
+      seasonAngle = (seasonAngle + 18 * dt) % 360;
+      seasonSlider.value = Math.round(seasonAngle);
+      updateSeasonReadout();
+    }
+    const rad = seasonAngle * Math.PI / 180;
+    sEarthOrbit.position.set(Math.cos(rad) * SEASON_RO, 0, Math.sin(rad) * SEASON_RO);
+    if (!reduceMotion) seasonSpin += 1.1 * dt;       // daily rotation -> day/night sweep
+    sEarth.rotation.y = seasonSpin;
+    sRenderer.render(sScene, sCam);
+    seasonRAF = requestAnimationFrame(seasonFrame);
+  }
+
+  function setSeason(on){
+    if (on === seasonMode) return;
+    seasonMode = on;
+    if (on){
+      stopTour(); closeQuiz(); setCompare(false); setDistance(false); closePhase(); closeWeight(); closeConst();
+      initSeasonScene(); sizeSeasonRenderer();
+      if (reduceMotion) seasonPlaying = false;
+      syncSeasonPlayBtn(); updateSeasonReadout();
+      seasonPanel.classList.add('on');
+      if (isMobile) panel.classList.remove('open');
+      announce(T().ui.seasonTitle);
+      seasonLastT = null; seasonRAF = requestAnimationFrame(seasonFrame);
+    } else {
+      seasonPanel.classList.remove('on');
+      if (seasonRAF){ cancelAnimationFrame(seasonRAF); seasonRAF = null; }
+    }
+    if (typeof updateURL === 'function') updateURL();
+  }
+  function closeSeason(){ setSeason(false); }
+  document.getElementById('seasonBtn').addEventListener('click', () => setSeason(true));
+  document.getElementById('seasonClose').addEventListener('click', () => setSeason(false));
+  seasonSlider.addEventListener('input', () => { seasonAngle = Number(seasonSlider.value); seasonPlaying = false; syncSeasonPlayBtn(); updateSeasonReadout(); });
+  seasonPlayBtn.addEventListener('click', () => { seasonPlaying = !seasonPlaying; seasonLastT = null; syncSeasonPlayBtn(); });
+  window.addEventListener('resize', () => { if (seasonMode) sizeSeasonRenderer(); });
+
   // ---- keyboard controls (accessibility) ----
   window.addEventListener('keydown', e => {
     const tag = (e.target && e.target.tagName || '').toLowerCase();
     if (tag === 'input' || tag === 'textarea') return; // để slider/ô nhập hoạt động
     const k = e.key;
     if (k === 'Escape'){
-      if (phaseMode) closePhase();
+      if (seasonMode) closeSeason();
+      else if (phaseMode) closePhase();
       else if (weightPanel.classList.contains('on')) closeWeight();
       else if (document.getElementById('quizSetup').classList.contains('on') ||
           document.getElementById('quizResult').classList.contains('on') || quizActive) closeQuiz();
@@ -1638,6 +1783,7 @@ function boot(){
   else if (urlParams.get('view') === 'distance') setDistance(true);
   else if (urlParams.get('view') === 'phase') setPhase(true);
   else if (urlParams.get('view') === 'constellations') setConst(true);
+  else if (urlParams.get('view') === 'seasons') setSeason(true);
 
   // ---- render loop ----
   const tmp = new THREE.Vector3();

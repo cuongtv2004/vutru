@@ -193,6 +193,21 @@ def main():
         page.keyboard.press("Escape"); page.wait_for_timeout(300)
         check("Escape closes phase overlay", "on" not in (page.get_attribute("#phasePanel", "class") or ""))
 
+        # Day/night & seasons mini-scene
+        page.click("#seasonBtn"); page.wait_for_timeout(400)
+        check("season panel opens", "on" in (page.get_attribute("#seasonPanel", "class") or ""))
+        check("season readout shows a season", len((page.text_content("#seasonName") or "").strip()) > 0)
+        page.eval_on_selector("#seasonSlider", "el=>{el.value=180; el.dispatchEvent(new Event('input',{bubbles:true}));}")
+        page.wait_for_timeout(150)
+        sn = page.text_content("#seasonName") or ""
+        check("orbit 180° -> Winter (N)", ("Winter" in sn) or ("Đông" in sn), sn)
+        page.eval_on_selector("#seasonSlider", "el=>{el.value=0; el.dispatchEvent(new Event('input',{bubbles:true}));}")
+        page.wait_for_timeout(150)
+        sn = page.text_content("#seasonName") or ""
+        check("orbit 0° -> Summer (N)", ("Summer" in sn) or ("Hè" in sn), sn)
+        page.keyboard.press("Escape"); page.wait_for_timeout(300)
+        check("Escape closes season overlay", "on" not in (page.get_attribute("#seasonPanel", "class") or ""))
+
         # Constellations mode
         page.click("#constBtn"); page.wait_for_timeout(700)
         check("constellation caption on", "on" in (page.get_attribute("#constCap", "class") or ""))
