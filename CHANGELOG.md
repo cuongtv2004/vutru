@@ -3,6 +3,12 @@
 Lịch sử các phần đã làm cho Hệ Mặt Trời 3D (mục tiêu: cho các bé học tập).
 Dựa trên ý tưởng từ [locphamnguyen/solar-system-3d](https://github.com/locphamnguyen/solar-system-3d).
 
+## Phase 15 — Chòm sao
+- Nút **✨ Chòm sao**: chế độ vẽ **6 chòm sao quen thuộc** lên nền sao (Lạp Hộ/Orion, Gấu Lớn/Bắc Đẩu, Tiên Hậu/Cassiopeia, Bọ Cạp/Scorpius, Sư Tử/Leo, Thiên Nga/Cygnus).
+- Mỗi chòm gồm các **ngôi sao** (sao sáng nổi bật to & vàng hơn) + **đường nối** mô tả hình vẽ + **tên song ngữ**. Bố trí dạng "bản đồ sao" nhìn thẳng, tự canh khung theo tỉ lệ màn hình (hợp cả ngang/dọc).
+- Dùng đúng pattern "chế độ" như So sánh/Khoảng cách: ẩn hệ mặt trời, giữ nền sao, loại trừ lẫn nhau với các chế độ khác; thoát bằng nút hoặc Esc; deep-link `?view=constellations`.
+- Kiểm thử: +5 checks (53 tổng).
+
 ## Phase 14 — Pha Mặt Trăng & Nhật/Nguyệt thực
 - Nút **🌗 Pha & Nhật/Nguyệt thực**: mở một **mini-scene riêng** (Three.js, renderer độc lập) mô phỏng Mặt Trời – Trái Đất – Mặt Trăng.
 - Kéo **thanh trượt** (hoặc bấm ▶ để tự chạy) để Mặt Trăng đi quanh Trái Đất; phần được Mặt Trời chiếu sáng đổi dần → hiển thị **8 pha** (Trăng non → Trăng tròn → khuyết) kèm emoji 🌑🌒🌓🌔🌕🌖🌗🌘 và tên song ngữ.

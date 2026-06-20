@@ -178,6 +178,21 @@ def main():
         page.keyboard.press("Escape"); page.wait_for_timeout(300)
         check("Escape closes phase overlay", "on" not in (page.get_attribute("#phasePanel", "class") or ""))
 
+        # Constellations mode
+        page.click("#constBtn"); page.wait_for_timeout(700)
+        check("constellation caption on", "on" in (page.get_attribute("#constCap", "class") or ""))
+        check("constellation button active", "active" in (page.get_attribute("#constBtn", "class") or ""))
+        n_const = page.eval_on_selector_all(".const-label", "els=>els.length")
+        check("6 constellation labels present", n_const == 6, f"{n_const} labels")
+        vis = page.eval_on_selector_all(".const-label", "els=>els.filter(e=>getComputedStyle(e).display!=='none').length")
+        check("constellation labels visible", vis >= 1, f"{vis} visible")
+        # mutual exclusivity: switching to compare turns constellations off
+        page.click("#compareBtn"); page.wait_for_timeout(500)
+        check("compare turns constellations off",
+              "on" not in (page.get_attribute("#constCap", "class") or "")
+              and "active" not in (page.get_attribute("#constBtn", "class") or ""))
+        page.click("#compareBtn"); page.wait_for_timeout(300)
+
         # Deep-link: state reflected in URL + loadable from URL
         check("URL has deep-link params", "body=" in page.url and "lang=" in page.url, page.url)
         page2 = browser.new_page(viewport={"width": 1100, "height": 700})
