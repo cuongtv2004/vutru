@@ -250,7 +250,14 @@ const DATA = [
   {id:'uranus', color:0x9fd8db, r:3.6, orbit:172, period:30687, tex:'uranus.jpg',
    moons:[{id:'miranda', color:0xb8bfc9, r:0.4, orbit:6.5, period:1.41, tex:'moon.jpg', tint:0xc4ccd8}]},
   {id:'neptune', color:0x5b7fd5, r:3.5, orbit:200, period:60190, tex:'neptune.jpg',
-   moons:[{id:'triton', color:0xc4b8c9, r:0.6, orbit:6.8, period:5.88, tex:'triton.jpg'}]}
+   moons:[{id:'triton', color:0xc4b8c9, r:0.6, orbit:6.8, period:5.88, tex:'triton.jpg'}]},
+  // --- Hành tinh lùn (dwarf planets) ---
+  {id:'ceres', color:0x9a958c, r:0.45, orbit:78, period:1682, dwarf:true},
+  {id:'pluto', color:0xc9b29a, r:0.6, orbit:236, period:90560, dwarf:true,
+   moons:[{id:'charon', color:0xa9a29a, r:0.3, orbit:2.4, period:6.39, dwarf:true}]},
+  {id:'haumea', color:0xd8d2c8, r:0.5, orbit:252, period:103468, lumpy:true, dwarf:true},
+  {id:'makemake', color:0xc28658, r:0.5, orbit:268, period:112897, dwarf:true},
+  {id:'eris', color:0xcfc8bd, r:0.6, orbit:300, period:204060, dwarf:true}
 ];
 
 const I18N = {
@@ -298,7 +305,13 @@ const I18N = {
       uranus:{name:'Sao Thiên Vương', desc:'Hành tinh băng khổng lồ nghiêng 98° — gần như "lăn" trên quỹ đạo, khiến mỗi cực có 42 năm sáng rồi 42 năm tối. Màu xanh lam nhạt do khí methane.', stats:[['Đường kính','50.724 km'],['Cách Mặt Trời','19,2 AU'],['Chu kỳ quỹ đạo','84 năm'],['Vệ tinh','28']]},
       miranda:{name:'Miranda', desc:'Bề mặt chắp vá kỳ lạ với vách núi Verona Rupes cao ~20 km — vách đứng cao nhất hệ mặt trời.', stats:[['Đường kính','471 km'],['Chu kỳ','1,4 ngày']]},
       neptune:{name:'Sao Hải Vương', desc:'Hành tinh xa nhất, được phát hiện năm 1846 bằng tính toán toán học trước khi quan sát. Gió ở đây đạt 2.100 km/h — nhanh nhất hệ mặt trời.', stats:[['Đường kính','49.244 km'],['Cách Mặt Trời','30 AU'],['Chu kỳ quỹ đạo','165 năm'],['Vệ tinh','16']]},
-      triton:{name:'Triton', desc:'Quay ngược chiều quỹ đạo của Sao Hải Vương — dấu hiệu nó là thiên thể vành đai Kuiper bị bắt giữ. Có mạch phun nitơ lỏng dù lạnh -235°C.', stats:[['Đường kính','2.707 km'],['Chu kỳ','5,9 ngày']]}
+      triton:{name:'Triton', desc:'Quay ngược chiều quỹ đạo của Sao Hải Vương — dấu hiệu nó là thiên thể vành đai Kuiper bị bắt giữ. Có mạch phun nitơ lỏng dù lạnh -235°C.', stats:[['Đường kính','2.707 km'],['Chu kỳ','5,9 ngày']]},
+      ceres:{name:'Ceres', desc:'Hành tinh lùn duy nhất nằm trong vành đai tiểu hành tinh giữa Sao Hỏa và Sao Mộc, và là thiên thể lớn nhất ở đó. Có thể có nước đá dưới bề mặt.', stats:[['Đường kính','940 km'],['Cách Mặt Trời','2,77 AU'],['Chu kỳ quỹ đạo','4,6 năm']]},
+      pluto:{name:'Sao Diêm Vương', desc:'Từng được coi là hành tinh thứ 9, năm 2006 được xếp lại thành hành tinh lùn. Bề mặt băng giá -229°C với "trái tim" băng nitơ nổi tiếng.', stats:[['Đường kính','2.377 km'],['Cách Mặt Trời','39,5 AU'],['Chu kỳ quỹ đạo','248 năm'],['Vệ tinh','5']]},
+      charon:{name:'Charon', desc:'Vệ tinh lớn nhất của Sao Diêm Vương, lớn bằng nửa nó — hai thiên thể quay quanh nhau như một cặp đôi.', stats:[['Đường kính','1.212 km'],['Chu kỳ','6,4 ngày']]},
+      haumea:{name:'Haumea', desc:'Hành tinh lùn hình quả trứng do tự quay cực nhanh (chỉ 4 giờ một vòng). Có vành đai và hai mặt trăng.', stats:[['Đường kính','~1.560 km'],['Cách Mặt Trời','43 AU'],['Chu kỳ quỹ đạo','285 năm']]},
+      makemake:{name:'Makemake', desc:'Hành tinh lùn ở vành đai Kuiper, ánh đỏ hồng do các phân tử hữu cơ. Đặt theo tên thần sáng tạo của người Rapa Nui (đảo Phục Sinh).', stats:[['Đường kính','~1.430 km'],['Cách Mặt Trời','45,8 AU'],['Chu kỳ quỹ đạo','305 năm']]},
+      eris:{name:'Eris', desc:'Hành tinh lùn nặng nhất đã biết. Chính việc phát hiện ra nó đã dẫn đến việc Sao Diêm Vương bị "giáng cấp". Rất xa và lạnh.', stats:[['Đường kính','2.326 km'],['Cách Mặt Trời','68 AU'],['Chu kỳ quỹ đạo','557 năm'],['Vệ tinh','1']]}
     }
   },
   en: {
@@ -345,7 +358,13 @@ const I18N = {
       uranus:{name:'Uranus', desc:'An ice giant tilted 98° — it practically rolls along its orbit, giving each pole 42 years of light followed by 42 years of darkness. Its pale blue color comes from methane.', stats:[['Diameter','50,724 km'],['Distance from Sun','19.2 AU'],['Orbital period','84 years'],['Moons','28']]},
       miranda:{name:'Miranda', desc:'A strangely patchwork surface featuring Verona Rupes, a cliff ~20 km tall — the highest known cliff in the solar system.', stats:[['Diameter','471 km'],['Orbital period','1.4 days']]},
       neptune:{name:'Neptune', desc:'The most distant planet, discovered in 1846 through mathematical prediction before it was ever observed. Its winds reach 2,100 km/h — the fastest in the solar system.', stats:[['Diameter','49,244 km'],['Distance from Sun','30 AU'],['Orbital period','165 years'],['Moons','16']]},
-      triton:{name:'Triton', desc:"Orbits backwards relative to Neptune's rotation — a sign it is a captured Kuiper Belt object. It has geysers of liquid nitrogen despite being -235°C.", stats:[['Diameter','2,707 km'],['Orbital period','5.9 days']]}
+      triton:{name:'Triton', desc:"Orbits backwards relative to Neptune's rotation — a sign it is a captured Kuiper Belt object. It has geysers of liquid nitrogen despite being -235°C.", stats:[['Diameter','2,707 km'],['Orbital period','5.9 days']]},
+      ceres:{name:'Ceres', desc:'The only dwarf planet in the asteroid belt between Mars and Jupiter, and the largest body there. It may hold water ice beneath its surface.', stats:[['Diameter','940 km'],['Distance from Sun','2.77 AU'],['Orbital period','4.6 years']]},
+      pluto:{name:'Pluto', desc:'Once counted as the 9th planet, reclassified as a dwarf planet in 2006. Its icy -229°C surface has a famous nitrogen-ice "heart".', stats:[['Diameter','2,377 km'],['Distance from Sun','39.5 AU'],['Orbital period','248 years'],['Moons','5']]},
+      charon:{name:'Charon', desc:"Pluto's largest moon, about half its size — the two orbit each other like a pair.", stats:[['Diameter','1,212 km'],['Orbital period','6.4 days']]},
+      haumea:{name:'Haumea', desc:'An egg-shaped dwarf planet, squished by its very fast spin (one turn every 4 hours). It has rings and two moons.', stats:[['Diameter','~1,560 km'],['Distance from Sun','43 AU'],['Orbital period','285 years']]},
+      makemake:{name:'Makemake', desc:'A reddish Kuiper Belt dwarf planet, colored by organic molecules. Named after a creator god of the Rapa Nui (Easter Island).', stats:[['Diameter','~1,430 km'],['Distance from Sun','45.8 AU'],['Orbital period','305 years']]},
+      eris:{name:'Eris', desc:'The most massive known dwarf planet. Its discovery is what led to Pluto being reclassified. Very far and very cold.', stats:[['Diameter','2,326 km'],['Distance from Sun','68 AU'],['Orbital period','557 years'],['Moons','1']]}
     }
   }
 };
@@ -372,7 +391,13 @@ const FUN = {
     uranus:'Sao Thiên Vương nằm nghiêng và lăn quanh Mặt Trời như quả bóng! 🎳',
     miranda:'Miranda có vách đá cao nhất hệ — rơi xuống phải mất mười mấy phút! 🧗',
     neptune:'Gió trên Sao Hải Vương thổi nhanh hơn cả máy bay phản lực! 💨',
-    triton:'Triton quay ngược chiều và phun những mạch nước nitơ đóng băng! ❄️'
+    triton:'Triton quay ngược chiều và phun những mạch nước nitơ đóng băng! ❄️',
+    ceres:'Ceres nhỏ xíu nhưng là "ông vua" của vành đai tiểu hành tinh! 👑',
+    pluto:'Sao Diêm Vương có một "trái tim" băng khổng lồ trên bề mặt! 💙',
+    charon:'Charon lớn gần bằng nửa Sao Diêm Vương — chúng nhảy điệu valse quanh nhau! 💫',
+    haumea:'Haumea quay nhanh đến mức bị méo thành hình quả trứng! 🥚',
+    makemake:'Makemake được đặt theo tên vị thần của đảo Phục Sinh! 🗿',
+    eris:'Chính Eris đã khiến Sao Diêm Vương bị "out" khỏi nhóm hành tinh! 😮'
   },
   en: {
     sun:'The Sun is so big that over 1 million Earths could fit inside it! ☀️',
@@ -394,7 +419,13 @@ const FUN = {
     uranus:'Uranus is tipped on its side and rolls around the Sun like a ball! 🎳',
     miranda:'Miranda has the tallest cliff in the solar system — a fall would take many minutes! 🧗',
     neptune:'Winds on Neptune blow faster than a jet plane! 💨',
-    triton:'Triton orbits backwards and erupts frozen nitrogen geysers! ❄️'
+    triton:'Triton orbits backwards and erupts frozen nitrogen geysers! ❄️',
+    ceres:'Tiny Ceres is the king of the asteroid belt! 👑',
+    pluto:'Pluto has a giant icy "heart" on its surface! 💙',
+    charon:"Charon is nearly half Pluto's size — they waltz around each other! 💫",
+    haumea:'Haumea spins so fast it is squished into an egg shape! 🥚',
+    makemake:'Makemake is named after a god of Easter Island! 🗿',
+    eris:'Eris is the reason Pluto got voted out of the planet club! 😮'
   }
 };
 
