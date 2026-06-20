@@ -28,3 +28,8 @@ Dựa trên ý tưởng từ [locphamnguyen/solar-system-3d](https://github.com/
 ## Hạ tầng
 - **Test harness** `tests/runtime.py` (Playwright + Chromium headless) + CI GitHub Actions:
   bắt lỗi JS và kiểm thử tour/quiz/so-sánh/i18n trên mỗi PR.
+
+## Sửa lỗi
+- Quiz: trả lời SAI câu "vệ tinh của Trái Đất" gây crash vì `byId` không đăng ký
+  các mặt trăng → `selectBody(undefined)`. Đã đăng ký mặt trăng vào `byId`.
+  (Lỗi do chính test harness mới phát hiện.)

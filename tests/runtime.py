@@ -15,8 +15,6 @@ import http.server, socketserver, threading, functools, os, sys, time
 from playwright.sync_api import sync_playwright
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PORT = 8222
-URL = f"http://127.0.0.1:{PORT}/index.html"
 
 # Cảnh báo nhiễu của WebGL phần mềm trong môi trường headless — bỏ qua.
 NOISE = ("SwiftShader", "Automatic fallback", "GroupMarkerNotSet",
@@ -28,17 +26,21 @@ class QuietHandler(http.server.SimpleHTTPRequestHandler):
         pass
 
 
+class ReuseServer(socketserver.TCPServer):
+    allow_reuse_address = True  # phải là class attr để có hiệu lực trước khi bind
+
+
 def serve():
     handler = functools.partial(QuietHandler, directory=ROOT)
-    httpd = socketserver.TCPServer(("127.0.0.1", PORT), handler)
-    httpd.allow_reuse_address = True
+    httpd = ReuseServer(("127.0.0.1", 0), handler)  # port 0 = OS chọn cổng trống
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
-    return httpd
+    return httpd, httpd.server_address[1]
 
 
 def main():
-    httpd = serve()
-    time.sleep(0.8)
+    httpd, port = serve()
+    url = f"http://127.0.0.1:{port}/index.html"
+    time.sleep(0.5)
     errors, console_err, checks = [], [], []
 
     def check(name, cond, detail=""):
@@ -51,7 +53,7 @@ def main():
         page = browser.new_page(viewport={"width": 1280, "height": 720})
         page.on("pageerror", lambda e: errors.append(str(e)))
         page.on("console", lambda m: console_err.append(m.text) if m.type == "error" else None)
-        page.goto(URL, wait_until="load", timeout=30000)
+        page.goto(url, wait_until="load", timeout=30000)
         page.wait_for_timeout(2500)
 
         check("WebGL renders (no fallback)",
