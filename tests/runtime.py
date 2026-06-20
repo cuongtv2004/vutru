@@ -71,6 +71,16 @@ def main():
         check("compare exits cleanly", "on" not in (page.get_attribute("#compareCap", "class") or ""))
         check("compare aria-pressed false", page.get_attribute("#compareBtn", "aria-pressed") == "false")
 
+        # Real-distance mode
+        page.click("#distanceBtn"); page.wait_for_timeout(900)
+        check("distance caption on", "on" in (page.get_attribute("#distanceCap", "class") or ""))
+        check("distance aria-pressed true", page.get_attribute("#distanceBtn", "aria-pressed") == "true")
+        # switching to compare must turn distance off (mutually exclusive)
+        page.click("#compareBtn"); page.wait_for_timeout(600)
+        check("compare turns distance off", "on" not in (page.get_attribute("#distanceCap", "class") or "")
+              and "on" in (page.get_attribute("#compareCap", "class") or ""))
+        page.click("#compareBtn"); page.wait_for_timeout(400)
+
         # Tour
         page.click("#tourStartBtn"); page.wait_for_timeout(800)
         check("tour bar visible",
@@ -116,6 +126,17 @@ def main():
         page.click("#langBtn"); page.wait_for_timeout(400)
         after = page.text_content("#uiTitle")
         check("language toggles", before != after, f"{before} -> {after}")
+
+        # Deep-link: state reflected in URL + loadable from URL
+        check("URL has deep-link params", "body=" in page.url and "lang=" in page.url, page.url)
+        page2 = browser.new_page(viewport={"width": 1100, "height": 700})
+        page2.on("pageerror", lambda e: errors.append("page2: " + str(e)))
+        page2.goto(f"http://127.0.0.1:{port}/index.html?body=mars&lang=en", wait_until="load", timeout=30000)
+        page2.wait_for_timeout(2000)
+        check("deep-link selects body", (page2.text_content("#ipName") or "").strip() == "Mars",
+              page2.text_content("#ipName"))
+        check("deep-link sets language", (page2.text_content("#uiTitle") or "").strip() == "SOLAR SYSTEM")
+        page2.close()
 
         browser.close()
 

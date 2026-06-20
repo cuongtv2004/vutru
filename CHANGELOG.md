@@ -30,11 +30,27 @@ Dựa trên ý tưởng từ [locphamnguyen/solar-system-3d](https://github.com/
 - Mở rộng pool lên **19 câu** (thêm câu về mặt trăng & kích thước), mỗi câu gắn `cat`.
 - **Lưu điểm cao** (localStorage): hiện kỷ lục ở màn setup và màn kết quả, báo "🎉 Kỷ lục mới!" khi phá kỷ lục.
 
+## Phase 5 — Deep-link & chia sẻ
+- URL phản ánh trạng thái: `?body=earth&lang=vi&view=compare` (dùng `history.replaceState`, không reload).
+- Mở link có sẵn tham số → tự chọn đúng thiên thể, ngôn ngữ, chế độ xem. Giáo viên gửi link tới đúng hành tinh.
+- Nút **🔗 chép liên kết** (clipboard) + thông báo cho screen reader.
+
 ## Phase 7 — Accessibility
 - **Điều khiển bằng bàn phím**: phím mũi tên xoay camera, `+`/`-` phóng to/thu nhỏ, `Esc` thoát tour/quiz/so-sánh.
 - Tôn trọng **`prefers-reduced-motion`**: tắt confetti và tự-xoay (camera/hành tinh/vành đai) cho bé dễ say chuyển động.
 - **Screen reader**: vùng `aria-live` đọc tên thiên thể, câu hỏi & kết quả quiz; canvas có `role`/`aria-label`.
 - `aria-pressed` cho các nút bật/tắt (nhạc, so sánh, chạy/dừng, tạm dừng tour); `aria-current` cho thiên thể đang chọn; viền focus rõ ràng.
+
+## Phase 8 — Khoảng cách thật
+- Chế độ **🛰️ Khoảng cách thật**: Mặt Trời + 8 hành tinh xếp theo **đúng tỉ lệ khoảng cách (AU)** trên một trục.
+- Nhãn hiện khoảng cách từng hành tinh (vd "Sao Mộc · 5,2 AU"); caption nhấn mạnh Sao Hải Vương xa 30 AU.
+- Cho thấy các hành tinh trong dồn sát Mặt Trời còn nhóm ngoài cách rất xa. Loại trừ lẫn nhau với so-sánh/tour/quiz.
+
+## Phase 9 — Polish hình ảnh
+- **Hào quang Mặt Trời** nhiều lớp (additive blending) trông rực rỡ hơn.
+- **Khí quyển Trái Đất**: viền sáng xanh quanh hành tinh.
+- **Lớp sao sáng** thứ hai tạo chiều sâu cho nền vũ trụ.
+- **Vòng sáng** đánh dấu thiên thể đang chọn (luôn hướng về camera).
 
 ## Hạ tầng
 - **Test harness** `tests/runtime.py` (Playwright + Chromium headless) + CI GitHub Actions:
