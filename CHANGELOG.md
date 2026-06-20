@@ -52,6 +52,11 @@ Dựa trên ý tưởng từ [locphamnguyen/solar-system-3d](https://github.com/
 - **Lớp sao sáng** thứ hai tạo chiều sâu cho nền vũ trụ.
 - **Vòng sáng** đánh dấu thiên thể đang chọn (luôn hướng về camera).
 
+## Cải thiện đọc lời kể tiếng Việt
+- Chọn đúng **giọng tiếng Việt** từ hệ thống (`speechSynthesis`), nạp danh sách giọng bất đồng bộ.
+- Bật "Đọc lời kể" → đọc luôn thiên thể đang chọn (không chỉ trong tour).
+- Nếu thiết bị **không có giọng tiếng Việt** → báo nhẹ nhàng để người dùng cài giọng trong cài đặt hệ thống.
+
 ## Hạ tầng
 - **Test harness** `tests/runtime.py` (Playwright + Chromium headless) + CI GitHub Actions:
   bắt lỗi JS và kiểm thử tour/quiz/so-sánh/i18n trên mỗi PR.

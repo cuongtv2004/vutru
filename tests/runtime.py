@@ -127,6 +127,13 @@ def main():
         after = page.text_content("#uiTitle")
         check("language toggles", before != after, f"{before} -> {after}")
 
+        # Narration (headless has no TTS voices — verify toggle + select path doesn't crash)
+        page.check("#cbNarrate"); page.wait_for_timeout(300)
+        page.eval_on_selector_all("#bodyList .body-row", "els=>els[3] && els[3].click()")
+        page.wait_for_timeout(400)
+        check("narration toggle works without crash", len((page.text_content("#ipName") or "").strip()) > 0)
+        page.uncheck("#cbNarrate"); page.wait_for_timeout(150)
+
         # Deep-link: state reflected in URL + loadable from URL
         check("URL has deep-link params", "body=" in page.url and "lang=" in page.url, page.url)
         page2 = browser.new_page(viewport={"width": 1100, "height": 700})
