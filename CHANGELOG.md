@@ -3,6 +3,13 @@
 Lịch sử các phần đã làm cho Hệ Mặt Trời 3D (mục tiêu: cho các bé học tập).
 Dựa trên ý tưởng từ [locphamnguyen/solar-system-3d](https://github.com/locphamnguyen/solar-system-3d).
 
+## Phase 16 — Tìm kiếm, quiz tính giờ & ngày/đêm-mùa
+*(Bỏ "Chế độ giáo viên" P12 vì app dùng cục bộ ở nhà, không dùng trên lớp.)*
+- **🔍 Ô tìm kiếm thiên thể**: lọc nhanh danh sách bên sidebar theo tên, **bỏ dấu** và khớp **cả tiếng Việt lẫn tiếng Anh** (vd "sao hoa" → Sao Hỏa). Báo khi không có kết quả.
+- **⏱️ Quiz tính giờ**: chip chọn chế độ "Thường / Tính giờ" trong màn cài đặt quiz; mỗi câu đếm ngược 12 giây (hết giờ = sai, hiện đáp án), kỷ lục lưu **riêng** cho chế độ tính giờ.
+- **🌍 Ngày/đêm & mùa**: mini-scene riêng — Trái Đất nghiêng trục 23,5° (cố định hướng) quay quanh Mặt Trời; kéo thanh trượt đổi thời điểm trong năm → đổi mùa (Bắc bán cầu, kèm chú thích Nam bán cầu ngược lại); Trái Đất tự quay tạo ranh giới ngày/đêm. Vật lý solstice đã kiểm: cực nghiêng về Mặt Trời = mùa hè.
+- Tất cả song ngữ, tôn trọng reduced-motion, deep-link `?view=seasons`. Kiểm thử: +12 checks (65 tổng).
+
 ## Phase 15 — Chòm sao
 - Nút **✨ Chòm sao**: chế độ vẽ **6 chòm sao quen thuộc** lên nền sao (Lạp Hộ/Orion, Gấu Lớn/Bắc Đẩu, Tiên Hậu/Cassiopeia, Bọ Cạp/Scorpius, Sư Tử/Leo, Thiên Nga/Cygnus).
 - Mỗi chòm gồm các **ngôi sao** (sao sáng nổi bật to & vàng hơn) + **đường nối** mô tả hình vẽ + **tên song ngữ**. Bố trí dạng "bản đồ sao" nhìn thẳng, tự canh khung theo tỉ lệ màn hình (hợp cả ngang/dọc).

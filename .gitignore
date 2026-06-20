@@ -9,3 +9,6 @@ solar-system-3d/
 # Hệ thống
 .DS_Store
 Thumbs.db
+
+# Công cụ dev (Claude Code) — không commit
+.claude/

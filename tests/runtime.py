@@ -119,6 +119,21 @@ def main():
         check("high score line shown", len((page.text_content("#quizRecord") or "").strip()) > 0)
         page.click("#quizClose"); page.wait_for_timeout(300)
 
+        # Timed quiz mode
+        page.click("#quizStartBtn"); page.wait_for_timeout(300)
+        page.click('#modeChips .chip[data-timed="1"]'); page.wait_for_timeout(150)
+        check("timed mode chip activates",
+              "active" in (page.get_attribute('#modeChips .chip[data-timed="1"]', "class") or ""))
+        page.click('#topicChips .chip[data-topic="all"]'); page.wait_for_timeout(100)
+        page.click("#quizBegin"); page.wait_for_timeout(500)
+        check("countdown timer visible in timed mode",
+              page.eval_on_selector("#quizTimer", "e=>getComputedStyle(e).display") != "none")
+        check("countdown shows seconds", "s" in (page.text_content("#quizTimer") or ""),
+              page.text_content("#quizTimer"))
+        page.click("#quizExit"); page.wait_for_timeout(200)
+        check("timer hidden after exiting quiz",
+              page.eval_on_selector("#quizTimer", "e=>getComputedStyle(e).display") == "none")
+
         # Accessibility
         check("canvas is focusable application", page.get_attribute("#space", "role") == "application"
               and page.get_attribute("#space", "tabindex") == "0")
@@ -178,6 +193,21 @@ def main():
         page.keyboard.press("Escape"); page.wait_for_timeout(300)
         check("Escape closes phase overlay", "on" not in (page.get_attribute("#phasePanel", "class") or ""))
 
+        # Day/night & seasons mini-scene
+        page.click("#seasonBtn"); page.wait_for_timeout(400)
+        check("season panel opens", "on" in (page.get_attribute("#seasonPanel", "class") or ""))
+        check("season readout shows a season", len((page.text_content("#seasonName") or "").strip()) > 0)
+        page.eval_on_selector("#seasonSlider", "el=>{el.value=180; el.dispatchEvent(new Event('input',{bubbles:true}));}")
+        page.wait_for_timeout(150)
+        sn = page.text_content("#seasonName") or ""
+        check("orbit 180° -> Winter (N)", ("Winter" in sn) or ("Đông" in sn), sn)
+        page.eval_on_selector("#seasonSlider", "el=>{el.value=0; el.dispatchEvent(new Event('input',{bubbles:true}));}")
+        page.wait_for_timeout(150)
+        sn = page.text_content("#seasonName") or ""
+        check("orbit 0° -> Summer (N)", ("Summer" in sn) or ("Hè" in sn), sn)
+        page.keyboard.press("Escape"); page.wait_for_timeout(300)
+        check("Escape closes season overlay", "on" not in (page.get_attribute("#seasonPanel", "class") or ""))
+
         # Constellations mode
         page.click("#constBtn"); page.wait_for_timeout(700)
         check("constellation caption on", "on" in (page.get_attribute("#constCap", "class") or ""))
@@ -192,6 +222,19 @@ def main():
               "on" not in (page.get_attribute("#constCap", "class") or "")
               and "active" not in (page.get_attribute("#constBtn", "class") or ""))
         page.click("#compareBtn"); page.wait_for_timeout(300)
+
+        # Body search filter (accent-insensitive, matches vi OR en names)
+        total = page.eval_on_selector_all("#bodyList .body-row", "els=>els.length")
+        page.fill("#bodySearch", "sao hoa"); page.wait_for_timeout(200)
+        vis = page.eval_on_selector_all("#bodyList .body-row", "els=>els.filter(e=>getComputedStyle(e).display!=='none').length")
+        check("search narrows the body list", 0 < vis < total, f"{vis}/{total} visible")
+        names = page.eval_on_selector_all("#bodyList .body-row",
+            "els=>els.filter(e=>getComputedStyle(e).display!=='none').map(e=>e.textContent)")
+        check("accent-insensitive match (Sao Hỏa/Mars)",
+              any(("Hỏa" in n) or ("Mars" in n) for n in names), str(names))
+        page.fill("#bodySearch", ""); page.wait_for_timeout(200)
+        vis2 = page.eval_on_selector_all("#bodyList .body-row", "els=>els.filter(e=>getComputedStyle(e).display!=='none').length")
+        check("clearing search restores full list", vis2 == total, f"{vis2}/{total}")
 
         # Deep-link: state reflected in URL + loadable from URL
         check("URL has deep-link params", "body=" in page.url and "lang=" in page.url, page.url)
