@@ -512,7 +512,7 @@ function boot(){
       ring.rotation.x = Math.PI/2 - 0.45;
       b.mesh.add(ring);
     }
-    if (cfg.moons) for (const m of cfg.moons) makeBody({...m, fly: m.r*7+2.5}, b);
+    if (cfg.moons) for (const m of cfg.moons) byId[m.id] = makeBody({...m, fly: m.r*7+2.5}, b);
   }
 
   // ---- asteroid belt (InstancedMesh: 4 draw calls instead of 260) ----
