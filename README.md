@@ -51,7 +51,7 @@ solar-system/
 
 - [x] **Phase 1** — Chế độ "Khám phá có hướng dẫn" (camera tự bay + lời kể), fun facts đơn giản cho trẻ.
 - [x] **Phase 2** — Quiz học mà chơi ("Hành tinh nào nóng nhất?" → bấm chọn), hiệu ứng thưởng (confetti + âm thanh).
-- [ ] **Phase 3** — Toggle "Kích thước thật vs Dễ nhìn" để dạy về tỉ lệ vũ trụ.
+- [x] **Phase 3** — Chế độ "📏 So sánh kích thước": xếp 8 hành tinh theo tỉ lệ thật để dạy về tỉ lệ vũ trụ.
 
 ## 📜 Giấy phép & nguồn
 

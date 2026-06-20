@@ -75,6 +75,12 @@
   #quizClose { color:#cfd7ea; background:rgba(255,255,255,0.1); }
   .confetti { position:fixed; top:-30px; z-index:70; pointer-events:none; animation:fall linear forwards; }
   @keyframes fall { to { transform:translateY(108vh) rotate(540deg); opacity:0.15; } }
+  /* Size comparison */
+  #compareBtn { width:100%; margin:6px 0 2px; padding:8px; font-size:12px; font-weight:bold; color:#1a1430; background:linear-gradient(90deg,#b79bf0,#d4c2ff); border:none; border-radius:8px; cursor:pointer; font-family:inherit; }
+  #compareBtn:hover { filter:brightness(1.08); }
+  #compareBtn.active { box-shadow:0 0 0 2px #b79bf0, 0 0 12px rgba(183,155,240,0.6); }
+  #compareCap { position:absolute; left:50%; bottom:calc(16px + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:40; display:none; max-width:min(92vw,560px); padding:10px 16px; font-size:12.5px; line-height:1.5; color:#ece5ff; background:rgba(8,12,24,0.92); border:1px solid rgba(183,155,240,0.45); border-radius:12px; text-align:center; }
+  #compareCap.on { display:block; }
 </style>
 </head>
 <body>
@@ -93,6 +99,7 @@
     <div id="uiTitle" style="font-size:13px;font-weight:bold;color:#dfe6f5;letter-spacing:1px;">HỆ MẶT TRỜI</div>
     <button id="tourStartBtn" type="button">🚀 Khám phá có hướng dẫn</button>
     <button id="quizStartBtn" type="button">🎯 Đố vui</button>
+    <button id="compareBtn" type="button">📏 So sánh kích thước</button>
     <div class="lbl-sec" id="uiSimDate" style="margin-top:8px;">NGÀY MÔ PHỎNG</div>
     <div id="simDate" style="font-size:13px;color:#dfe6f5;margin-bottom:10px;">—</div>
     <div class="lbl-sec" id="uiTime">ĐIỀU KHIỂN THỜI GIAN</div>
@@ -145,6 +152,8 @@
     <button id="tourExit" aria-label="Thoát tour">✕</button>
   </div>
 
+  <div id="compareCap"></div>
+
   <div id="loader">
     <div class="planet-spin"></div>
     <div id="loadTxt">Đang tải vũ trụ…</div>
@@ -196,6 +205,8 @@ const I18N = {
       speed:n=>n+' ngày/giây', tourStart:'🚀 Khám phá có hướng dẫn', narrate:'Đọc lời kể',
       quizStart:'🎯 Đố vui', quizCorrect:'Chính xác! 🎉', quizWrong:'Chưa đúng rồi 😅', quizReplay:'Chơi lại', quizClose:'Đóng',
       quizMeta:(i,n,s)=>'Câu '+i+'/'+n+' · Điểm: '+s, quizResult:(s,n)=>'Bé trả lời đúng '+s+'/'+n+' câu!',
+      compareStart:'📏 So sánh kích thước',
+      compareCap:'Kích thước thật của các hành tinh so với nhau · ☀️ Mặt Trời còn to hơn Sao Mộc khoảng 10 lần nữa!',
       loading:'Đang tải vũ trụ…',
       nwTitle:'Trình duyệt không hỗ trợ 3D',
       nwBody:'Thiết bị hoặc trình duyệt của bạn chưa bật WebGL. Hãy thử mở bằng Chrome/Edge/Firefox mới, hoặc bật tăng tốc phần cứng trong cài đặt.' },
@@ -231,6 +242,8 @@ const I18N = {
       speed:n=>n+' days/s', tourStart:'🚀 Guided tour', narrate:'Narration',
       quizStart:'🎯 Quiz', quizCorrect:'Correct! 🎉', quizWrong:'Not quite 😅', quizReplay:'Play again', quizClose:'Close',
       quizMeta:(i,n,s)=>'Q '+i+'/'+n+' · Score: '+s, quizResult:(s,n)=>'You got '+s+'/'+n+' right!',
+      compareStart:'📏 Size comparison',
+      compareCap:'True sizes of the planets next to each other · ☀️ The Sun is about 10× bigger than Jupiter!',
       loading:'Loading the universe…',
       nwTitle:'Your browser does not support 3D',
       nwBody:'WebGL is not enabled on this device or browser. Try a recent Chrome/Edge/Firefox, or enable hardware acceleration in settings.' },
@@ -535,6 +548,39 @@ function boot(){
   instanced.forEach(m => { m.instanceMatrix.needsUpdate = true; beltGroup.add(m); });
   scene.add(beltGroup);
 
+  // ---- size-comparison view: 8 planets at TRUE relative sizes, in a row ----
+  const TRUE_R = {mercury:2440, venus:6052, earth:6371, mars:3390, jupiter:69911, saturn:58232, uranus:25362, neptune:24622};
+  const compareOrder = ['mercury','venus','earth','mars','jupiter','saturn','uranus','neptune'];
+  const CMP_F = 5 / TRUE_R.jupiter; // Jupiter -> 5 units
+  const compareGroup = new THREE.Group();
+  compareGroup.visible = false;
+  const compareItems = [];
+  const cmpRadii = compareOrder.map(id => Math.max(0.12, TRUE_R[id] * CMP_F));
+  const cmpGap = 1.4;
+  let compareWidth = cmpRadii.reduce((s,r) => s + 2*r, 0) + cmpGap * (compareOrder.length - 1);
+  let cmpX = -compareWidth / 2;
+  compareOrder.forEach((id, i) => {
+    const r = cmpRadii[i];
+    cmpX += r;
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(r, 36, 26), byId[id].mesh.material);
+    mesh.position.set(cmpX, 0, 0);
+    compareGroup.add(mesh);
+    if (id === 'saturn'){
+      const rg = new THREE.RingGeometry(r*1.4, r*2.3, 64);
+      const pos = rg.attributes.position, uv = rg.attributes.uv, mid = r*1.85, v3 = new THREE.Vector3();
+      for (let k=0;k<pos.count;k++){ v3.fromBufferAttribute(pos, k); uv.setXY(k, v3.length() < mid ? 0 : 1, 1); }
+      const ring = new THREE.Mesh(rg, new THREE.MeshBasicMaterial({color:0xcdb98c, side:THREE.DoubleSide, transparent:true, opacity:0.8}));
+      ring.rotation.x = Math.PI/2 - 0.45;
+      mesh.add(ring);
+    }
+    const lbl = document.createElement('div');
+    lbl.style.cssText = 'position:absolute;font-size:11px;color:rgba(225,232,248,0.85);transform:translate(-50%,-100%);white-space:nowrap;';
+    labelLayer.appendChild(lbl);
+    compareItems.push({id, mesh, label:lbl, r});
+    cmpX += r + cmpGap;
+  });
+  scene.add(compareGroup);
+
   // ---- sidebar list + labels (keyboard-accessible buttons) ----
   const list = document.getElementById('bodyList');
   for (const b of bodies){
@@ -602,6 +648,9 @@ function boot(){
     document.getElementById('quizClose').textContent = u.quizClose;
     if (quizActive) showQuestion();
     if (document.getElementById('quizResult').classList.contains('on')) document.getElementById('quizResultTxt').textContent = u.quizResult(score, quizSet.length);
+    document.getElementById('compareBtn').textContent = u.compareStart;
+    document.getElementById('compareCap').textContent = u.compareCap;
+    for (const c of compareItems) c.label.textContent = T().bodies[c.id].name;
     document.getElementById('spdOut').textContent = u.speed(speed);
     document.getElementById('loadTxt').textContent = u.loading;
     document.getElementById('nwTitle').textContent = u.nwTitle;
@@ -649,7 +698,7 @@ function boot(){
     pointers.delete(e.pointerId);
     pinchDist = 0;
     if (pointers.size === 0) canvas.style.cursor = 'grab';
-    if (wasSingle && moved < 8){
+    if (wasSingle && moved < 8 && !compareMode){
       const rect = canvas.getBoundingClientRect();
       const m = new THREE.Vector2(((e.clientX-rect.left)/rect.width)*2-1, -((e.clientY-rect.top)/rect.height)*2+1);
       const ray = new THREE.Raycaster();
@@ -723,7 +772,7 @@ function boot(){
     scheduleNext(spoke ? 13000 : 7500);
   }
   function startTour(){
-    closeQuiz();
+    closeQuiz(); setCompare(false);
     touring = true; tourPaused = false;
     tourBar.classList.add('on');
     tourPlayBtn.textContent = '❚❚';
@@ -786,7 +835,7 @@ function boot(){
     updateQuizMeta();
   }
   function startQuiz(){
-    stopTour();
+    stopTour(); setCompare(false);
     quizSet = shuffle(QUIZ.slice()).slice(0, 6);
     quizIdx = 0; score = 0; quizActive = true; quizLock = false;
     document.getElementById('quizResult').classList.remove('on');
@@ -830,6 +879,38 @@ function boot(){
   document.getElementById('quizReplay').addEventListener('click', startQuiz);
   document.getElementById('quizClose').addEventListener('click', closeQuiz);
 
+  // ---- size-comparison mode toggle ----
+  let compareMode = false, savedCam = null;
+  const compareBtn = document.getElementById('compareBtn');
+  const compareCap = document.getElementById('compareCap');
+  function setCompare(on){
+    if (on === compareMode) return;
+    compareMode = on;
+    if (on){
+      stopTour(); closeQuiz();
+      savedCam = {theta:camTheta, phi:camPhi, dist:targetDist};
+      for (const b of bodies){ b.mesh.visible = false; if (b.orbitLine) b.orbitLine.visible = false; }
+      beltGroup.visible = false;
+      compareGroup.visible = true;
+      camTheta = Math.PI/2; camPhi = Math.PI/2 - 0.12; targetDist = compareWidth * 0.62 + 6;
+      compareBtn.classList.add('active');
+      compareCap.classList.add('on');
+      ip.style.display = 'none';
+      if (isMobile) panel.classList.remove('open');
+    } else {
+      for (const b of bodies) b.mesh.visible = true;
+      const ob = document.getElementById('cbOrbit').checked;
+      for (const b of bodies) if (b.orbitLine) b.orbitLine.visible = ob;
+      beltGroup.visible = document.getElementById('cbBelt').checked;
+      compareGroup.visible = false;
+      if (savedCam){ camTheta = savedCam.theta; camPhi = savedCam.phi; targetDist = savedCam.dist; }
+      compareBtn.classList.remove('active');
+      compareCap.classList.remove('on');
+      ip.style.display = isMobile ? 'none' : '';
+    }
+  }
+  compareBtn.addEventListener('click', () => setCompare(!compareMode));
+
   applyLang();
   selectBody(byId.sun);
   if (isMobile) ip.style.display = 'none';
@@ -851,10 +932,11 @@ function boot(){
       document.getElementById('simDate').textContent = d.toLocaleDateString(T().locale, {month:'short', day:'numeric', year:'numeric'});
     }
     for (const b of bodies) b.mesh.rotation.y += 0.3*dt;
+    if (compareMode) for (const c of compareItems) c.mesh.rotation.y += 0.2*dt;
 
     if (touring && !tourPaused) camTheta -= 0.07*dt;
     camDist += (targetDist - camDist) * Math.min(1, dt*4);
-    selected.mesh.getWorldPosition(tmp);
+    if (compareMode) tmp.set(0,0,0); else selected.mesh.getWorldPosition(tmp);
     camera.position.set(
       tmp.x + camDist*Math.sin(camPhi)*Math.cos(camTheta),
       tmp.y + camDist*Math.cos(camPhi),
@@ -862,16 +944,30 @@ function boot(){
     camera.lookAt(tmp);
 
     const w = wrap.clientWidth, h = wrap.clientHeight;
-    for (const b of bodies){
-      if (!showLabels || b.indent && selected.parent !== b.parent && selected !== b.parent && selected !== b){
-        b.label.style.display = 'none'; continue;
+    if (compareMode){
+      for (const b of bodies) b.label.style.display = 'none';
+      for (const c of compareItems){
+        if (!showLabels){ c.label.style.display = 'none'; continue; }
+        c.mesh.getWorldPosition(tmp);
+        const v = tmp.clone().project(camera);
+        if (v.z > 1 || v.x < -1 || v.x > 1 || v.y < -1 || v.y > 1){ c.label.style.display = 'none'; continue; }
+        c.label.style.display = '';
+        c.label.style.left = ((v.x+1)/2*w) + 'px';
+        c.label.style.top = ((-v.y+1)/2*h - 10) + 'px';
       }
-      b.mesh.getWorldPosition(tmp);
-      const v = tmp.clone().project(camera);
-      if (v.z > 1 || v.x < -1 || v.x > 1 || v.y < -1 || v.y > 1){ b.label.style.display = 'none'; continue; }
-      b.label.style.display = '';
-      b.label.style.left = ((v.x+1)/2*w) + 'px';
-      b.label.style.top = ((-v.y+1)/2*h - 10) + 'px';
+    } else {
+      for (const c of compareItems) c.label.style.display = 'none';
+      for (const b of bodies){
+        if (!showLabels || b.indent && selected.parent !== b.parent && selected !== b.parent && selected !== b){
+          b.label.style.display = 'none'; continue;
+        }
+        b.mesh.getWorldPosition(tmp);
+        const v = tmp.clone().project(camera);
+        if (v.z > 1 || v.x < -1 || v.x > 1 || v.y < -1 || v.y > 1){ b.label.style.display = 'none'; continue; }
+        b.label.style.display = '';
+        b.label.style.left = ((v.x+1)/2*w) + 'px';
+        b.label.style.top = ((-v.y+1)/2*h - 10) + 'px';
+      }
     }
     renderer.render(scene, camera);
     requestAnimationFrame(tick);
