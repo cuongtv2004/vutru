@@ -52,10 +52,11 @@ Dựa trên ý tưởng từ [locphamnguyen/solar-system-3d](https://github.com/
 - **Lớp sao sáng** thứ hai tạo chiều sâu cho nền vũ trụ.
 - **Vòng sáng** đánh dấu thiên thể đang chọn (luôn hướng về camera).
 
-## Cải thiện đọc lời kể tiếng Việt
-- Chọn đúng **giọng tiếng Việt** từ hệ thống (`speechSynthesis`), nạp danh sách giọng bất đồng bộ.
+## Âm thanh: nút tắt tiếng + đọc lời kể tiếng Việt chuẩn
+- **Nút 🔊/🔇 tắt-bật tiếng (master)**: mặc định **TẮT khi mở** (hết cảnh nhạc tự phát khó chịu), nhớ lựa chọn (localStorage), tắt luôn nhạc nền + hiệu ứng + lời kể.
+- **Đọc lời kể bằng file audio tiếng Việt sinh sẵn** (`assets/narration/<lang>/<id>.mp3`) → đọc giọng Việt chuẩn, **không phụ thuộc giọng của thiết bị**, chạy offline. Fallback Web Speech (chọn đúng giọng) nếu thiếu file.
 - Bật "Đọc lời kể" → đọc luôn thiên thể đang chọn (không chỉ trong tour).
-- Nếu thiết bị **không có giọng tiếng Việt** → báo nhẹ nhàng để người dùng cài giọng trong cài đặt hệ thống.
+- *Audio sinh bằng gTTS (Google TTS) một lần rồi đóng gói vào repo.*
 
 ## Hạ tầng
 - **Test harness** `tests/runtime.py` (Playwright + Chromium headless) + CI GitHub Actions:

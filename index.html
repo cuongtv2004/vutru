@@ -109,7 +109,7 @@
   <button id="menuBtn" class="corner-btn" aria-label="Mở danh sách thiên thể">☰</button>
   <button id="shareBtn" class="corner-btn" aria-label="Chép liên kết chia sẻ">🔗</button>
   <button id="langBtn" class="corner-btn" aria-label="Đổi ngôn ngữ">EN</button>
-  <button id="musicBtn" class="corner-btn" aria-label="Bật/tắt nhạc nền" aria-pressed="false">♪</button>
+  <button id="musicBtn" class="corner-btn" aria-label="Bật tiếng" aria-pressed="false">🔇</button>
 
   <div id="panel">
     <div id="uiTitle" style="font-size:13px;font-weight:bold;color:#dfe6f5;letter-spacing:1px;">HỆ MẶT TRỜI</div>
@@ -242,6 +242,7 @@ const I18N = {
       hintMobile:'1 ngón = xoay · Chụm = phóng to · Chạm = bay tới',
       speed:n=>n+' ngày/giây', tourStart:'🚀 Khám phá có hướng dẫn', narrate:'Đọc lời kể',
       narrateNoVoice:'Thiết bị chưa có giọng đọc tiếng Việt. Hãy cài giọng tiếng Việt trong Cài đặt hệ thống để nghe đúng nhé.',
+      soundOnLabel:'Bật tiếng', soundOffLabel:'Tắt tiếng',
       quizStart:'🎯 Đố vui', quizCorrect:'Chính xác! 🎉', quizWrong:'Chưa đúng rồi 😅', quizReplay:'Chơi lại', quizClose:'Đóng',
       quizMeta:(i,n,s)=>'Câu '+i+'/'+n+' · Điểm: '+s, quizResult:(s,n)=>'Bé trả lời đúng '+s+'/'+n+' câu!',
       quizSetupTitle:'Chọn chủ đề & số câu', quizBegin:'Bắt đầu',
@@ -287,6 +288,7 @@ const I18N = {
       hintMobile:'1 finger = orbit · Pinch = zoom · Tap = fly to',
       speed:n=>n+' days/s', tourStart:'🚀 Guided tour', narrate:'Narration',
       narrateNoVoice:'This device has no voice for the selected language. Install one in system settings to hear it.',
+      soundOnLabel:'Sound on', soundOffLabel:'Sound off',
       quizStart:'🎯 Quiz', quizCorrect:'Correct! 🎉', quizWrong:'Not quite 😅', quizReplay:'Play again', quizClose:'Close',
       quizMeta:(i,n,s)=>'Q '+i+'/'+n+' · Score: '+s, quizResult:(s,n)=>'You got '+s+'/'+n+' right!',
       quizSetupTitle:'Choose topic & length', quizBegin:'Start',
@@ -481,25 +483,24 @@ function boot(){
     if (opening) ip.style.display = 'none';
   });
 
-  // ---- music ----
+  // ---- âm thanh: nút tắt/bật tiếng (master). MẶC ĐỊNH TẮT khi mở, nhớ lựa chọn ----
   const bgm = document.getElementById('bgm');
   const musicBtn = document.getElementById('musicBtn');
-  let musicOn = false, userMuted = false;
-  function setMusic(on){
-    musicOn = on;
-    musicBtn.style.opacity = on ? '1' : '0.45';
-    musicBtn.style.textDecoration = on ? 'none' : 'line-through';
-    musicBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
-    if (on) bgm.play().catch(()=>{ musicOn = false; musicBtn.style.opacity = '0.45'; });
-    else bgm.pause();
-  }
-  musicBtn.addEventListener('click', () => { userMuted = musicOn; setMusic(!musicOn); });
+  const narrAudio = new Audio();   // dùng cho đọc lời kể (file mp3 sinh sẵn)
   bgm.volume = 0.55;
-  bgm.play().then(()=>{ musicOn = true; musicBtn.style.opacity = '1'; }).catch(()=>{
-    musicBtn.style.opacity = '0.45';
-    const kick = () => { if (!userMuted && !musicOn) setMusic(true); window.removeEventListener('pointerdown', kick); };
-    window.addEventListener('pointerdown', kick);
-  });
+  let soundOn = localStorage.getItem('ssSound') === 'on';   // không có thì coi như TẮT
+  function setSound(on){
+    soundOn = on;
+    localStorage.setItem('ssSound', on ? 'on' : 'off');
+    musicBtn.textContent = on ? '🔊' : '🔇';
+    musicBtn.style.opacity = on ? '1' : '0.7';
+    musicBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    musicBtn.setAttribute('aria-label', on ? T().ui.soundOffLabel : T().ui.soundOnLabel);
+    if (on){ bgm.play().catch(()=>{}); }
+    else { bgm.pause(); try { narrAudio.pause(); } catch(e){} if (window.speechSynthesis) try { speechSynthesis.cancel(); } catch(e){} }
+  }
+  musicBtn.addEventListener('click', () => setSound(!soundOn));
+  setSound(soundOn);   // áp dụng ngay -> im lặng khi mở (mặc định)
 
   function resize(){
     const w = wrap.clientWidth, h = wrap.clientHeight;
@@ -728,7 +729,7 @@ function boot(){
     targetDist = b.fly;
     const info = T().bodies[b.id];
     announce(info.name);
-    if (narrate && !touring) speak(info.name + '. ' + ((FUN[lang] && FUN[lang][b.id]) || ''));
+    if (!touring) playNarration(b.id, info.name + '. ' + ((FUN[lang] && FUN[lang][b.id]) || ''));
     document.getElementById('ipName').textContent = info.name;
     document.getElementById('ipDesc').textContent = info.desc || '';
     const funEl = document.getElementById('ipFun');
@@ -889,7 +890,8 @@ function boot(){
   const tourPlayBtn = document.getElementById('tourPlay');
   const tourPosEl = document.getElementById('tourPos');
 
-  // ---- giọng đọc: nạp danh sách + chọn đúng giọng theo ngôn ngữ ----
+  // ---- đọc lời kể: ưu tiên FILE AUDIO sinh sẵn (giọng Việt/Anh chuẩn, offline),
+  //      lỗi/thiếu file thì fallback Web Speech của hệ thống ----
   let voices = [];
   function loadVoices(){ try { voices = speechSynthesis.getVoices() || []; } catch(e){ voices = []; } }
   if ('speechSynthesis' in window){ loadVoices(); try { speechSynthesis.onvoiceschanged = loadVoices; } catch(e){} }
@@ -898,27 +900,36 @@ function boot(){
     return voices.find(v => v.lang && v.lang.toLowerCase().startsWith(code)) || null;
   }
 
-  document.getElementById('cbNarrate').addEventListener('change', e => {
-    narrate = e.target.checked;
-    if (!narrate){ if (window.speechSynthesis) speechSynthesis.cancel(); return; }
-    loadVoices();
-    // chỉ cảnh báo khi đã biết danh sách giọng mà không có giọng phù hợp
-    if (voices.length && !pickVoice(T().locale)) announce(T().ui.narrateNoVoice);
-    else if (selected) speak(T().bodies[selected.id].name + '. ' + ((FUN[lang] && FUN[lang][selected.id]) || ''));
-  });
-
-  function speak(text){
-    if (!narrate || !('speechSynthesis' in window)) return false;
+  function narrationEnd(){ if (touring && !tourPaused) scheduleNext(800); }
+  function stopNarration(){ try { narrAudio.pause(); } catch(e){} if (window.speechSynthesis) try { speechSynthesis.cancel(); } catch(e){} }
+  function speakWeb(text){
+    if (!('speechSynthesis' in window)){ narrationEnd(); return; }
     try {
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
       u.lang = T().locale; u.rate = 0.95; u.pitch = 1.05;
       const v = pickVoice(T().locale); if (v) u.voice = v;
-      u.onend = () => { if (touring && !tourPaused) scheduleNext(800); };
+      u.onend = narrationEnd;
       speechSynthesis.speak(u);
-      return true;
-    } catch(e){ return false; }
+    } catch(e){ narrationEnd(); }
   }
+  // đọc 1 thiên thể: phát file mp3 đã sinh; nếu lỗi (thiếu file) thì dùng Web Speech
+  function playNarration(id, text){
+    if (!soundOn || !narrate) return false;
+    stopNarration();
+    narrAudio.onended = narrationEnd;
+    narrAudio.src = 'assets/narration/' + lang + '/' + id + '.mp3';
+    const p = narrAudio.play();
+    if (p && p.catch) p.catch(() => speakWeb(text));
+    return true;
+  }
+  function narrationText(id){ return T().bodies[id].name + '. ' + ((FUN[lang] && FUN[lang][id]) || ''); }
+
+  document.getElementById('cbNarrate').addEventListener('change', e => {
+    narrate = e.target.checked;
+    if (!narrate){ stopNarration(); return; }
+    if (selected) playNarration(selected.id, narrationText(selected.id));
+  });
 
   function clearTourTimer(){ if (tourTimer){ clearTimeout(tourTimer); tourTimer = null; } }
   function scheduleNext(delay){ clearTourTimer(); tourTimer = setTimeout(() => tourGo(tourIdx + 1), delay); }
@@ -934,9 +945,9 @@ function boot(){
     if (tourPaused) return;
     const info = T().bodies[tourOrder[i]];
     const fun = (FUN[lang] && FUN[lang][tourOrder[i]]) || '';
-    const spoke = speak(info.name + '. ' + fun);
-    // Fallback timer so the tour always advances even if speech is off/unavailable
-    scheduleNext(spoke ? 13000 : 7500);
+    const willPlay = playNarration(tourOrder[i], info.name + '. ' + fun);
+    // Fallback timer để tour luôn chuyển chặng kể cả khi tắt tiếng/không phát được
+    scheduleNext(willPlay ? 15000 : 7500);
   }
   function startTour(){
     closeQuiz(); setCompare(false); setDistance(false);
@@ -950,14 +961,14 @@ function boot(){
     touring = false; tourPaused = false;
     tourBar.classList.remove('on');
     clearTourTimer();
-    if (window.speechSynthesis) speechSynthesis.cancel();
+    stopNarration();
   }
   function toggleTourPause(){
     if (!touring) return;
     tourPaused = !tourPaused;
     tourPlayBtn.textContent = tourPaused ? '▶' : '❚❚';
     tourPlayBtn.setAttribute('aria-pressed', tourPaused ? 'true' : 'false');
-    if (tourPaused){ clearTourTimer(); if (window.speechSynthesis) speechSynthesis.cancel(); }
+    if (tourPaused){ clearTourTimer(); stopNarration(); }
     else tourGo(tourIdx);
   }
   document.getElementById('tourStartBtn').addEventListener('click', startTour);
@@ -969,6 +980,7 @@ function boot(){
   // ---- Quiz "học mà chơi" ----
   let quizActive = false, quizLock = false, quizIdx = 0, score = 0, quizSet = [], actx = null;
   function blip(ok){
+    if (!soundOn) return;
     try {
       actx = actx || new (window.AudioContext || window.webkitAudioContext)();
       const o = actx.createOscillator(), g = actx.createGain();

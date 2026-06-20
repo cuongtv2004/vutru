@@ -127,12 +127,18 @@ def main():
         after = page.text_content("#uiTitle")
         check("language toggles", before != after, f"{before} -> {after}")
 
-        # Narration (headless has no TTS voices — verify toggle + select path doesn't crash)
-        page.check("#cbNarrate"); page.wait_for_timeout(300)
+        # Sound: default MUTED on open (the user's fix), toggle works
+        check("default muted on open", page.get_attribute("#musicBtn", "aria-pressed") == "false")
+        page.click("#musicBtn"); page.wait_for_timeout(200)
+        check("sound toggles on", page.get_attribute("#musicBtn", "aria-pressed") == "true")
+        # Narration via pre-generated audio file (device-independent Vietnamese)
+        page.check("#cbNarrate"); page.wait_for_timeout(200)
         page.eval_on_selector_all("#bodyList .body-row", "els=>els[3] && els[3].click()")
-        page.wait_for_timeout(400)
+        page.wait_for_timeout(500)
         check("narration toggle works without crash", len((page.text_content("#ipName") or "").strip()) > 0)
-        page.uncheck("#cbNarrate"); page.wait_for_timeout(150)
+        r = page.request.get(f"http://127.0.0.1:{port}/assets/narration/vi/earth.mp3")
+        check("vi narration audio file served", r.status == 200, f"status {r.status}")
+        page.uncheck("#cbNarrate"); page.click("#musicBtn"); page.wait_for_timeout(150)
 
         # Deep-link: state reflected in URL + loadable from URL
         check("URL has deep-link params", "body=" in page.url and "lang=" in page.url, page.url)
