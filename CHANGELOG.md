@@ -3,6 +3,13 @@
 Lịch sử các phần đã làm cho Hệ Mặt Trời 3D (mục tiêu: cho các bé học tập).
 Dựa trên ý tưởng từ [locphamnguyen/solar-system-3d](https://github.com/locphamnguyen/solar-system-3d).
 
+## Phase 14 — Pha Mặt Trăng & Nhật/Nguyệt thực
+- Nút **🌗 Pha & Nhật/Nguyệt thực**: mở một **mini-scene riêng** (Three.js, renderer độc lập) mô phỏng Mặt Trời – Trái Đất – Mặt Trăng.
+- Kéo **thanh trượt** (hoặc bấm ▶ để tự chạy) để Mặt Trăng đi quanh Trái Đất; phần được Mặt Trời chiếu sáng đổi dần → hiển thị **8 pha** (Trăng non → Trăng tròn → khuyết) kèm emoji 🌑🌒🌓🌔🌕🌖🌗🌘 và tên song ngữ.
+- **Nhật thực** khi Trăng non thẳng hàng (bóng Mặt Trăng chấm lên Trái Đất); **nguyệt thực** khi Trăng tròn thẳng hàng (Mặt Trăng nhuốm đỏ đồng). Có lời giải thích vì sao thực không xảy ra mỗi tháng (quỹ đạo nghiêng).
+- Trái Đất có ranh giới ngày/đêm thật nhờ ánh sáng định hướng từ Mặt Trời; loại trừ lẫn nhau với tour/quiz/so-sánh/khoảng-cách; tôn trọng `prefers-reduced-motion` (mặc định tạm dừng); thoát bằng ✕ hoặc Esc; có deep-link `?view=phase`.
+- Kiểm thử: +5 checks (48 tổng).
+
 ## Phase 12 — Tích hợp 5 hành tinh lùn vào mọi chế độ
 - **Guided tour**: thêm Ceres, Sao Diêm Vương, Haumea, Makemake, Eris vào cuối hành trình (9 → 14 chặng), đọc lời kể bằng file audio sẵn có.
 - **So sánh kích thước (📏)**: thêm 5 hành tinh lùn ở cuối hàng — bé thấy chúng tí xíu so với 8 hành tinh.

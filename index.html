@@ -100,6 +100,20 @@
   #distanceBtn { width:100%; margin:6px 0 2px; padding:8px; font-size:12px; font-weight:bold; color:#08182a; background:linear-gradient(90deg,#6fb3f0,#a6d4ff); border:none; border-radius:8px; cursor:pointer; font-family:inherit; }
   #distanceBtn:hover { filter:brightness(1.08); }
   #distanceBtn.active { box-shadow:0 0 0 2px #6fb3f0, 0 0 12px rgba(111,179,240,0.6); }
+  #phaseBtn { width:100%; margin:6px 0 2px; padding:8px; font-size:12px; font-weight:bold; color:#1a1224; background:linear-gradient(90deg,#c9b6e6,#e8d6ff); border:none; border-radius:8px; cursor:pointer; font-family:inherit; }
+  #phaseBtn:hover { filter:brightness(1.08); }
+  /* Phase & eclipse mini-scene */
+  #phasePanel { position:absolute; inset:0; z-index:55; display:none; align-items:center; justify-content:center; background:rgba(4,6,12,0.78); padding:12px; }
+  #phasePanel.on { display:flex; }
+  .phase-card { max-width:min(94vw,560px); width:560px; }
+  #phaseCanvas { width:100%; height:300px; display:block; border-radius:12px; background:#03050c; margin-bottom:10px; }
+  #phaseReadout { display:flex; align-items:center; justify-content:center; gap:10px; font-size:18px; color:#eef2fb; font-weight:bold; }
+  #phaseEmoji { font-size:30px; line-height:1; }
+  #phaseEvent { min-height:20px; margin:7px 0 2px; font-size:13px; font-weight:bold; color:#ffd877; }
+  #phaseControls { display:flex; align-items:center; gap:12px; margin:10px 4px 4px; }
+  #phaseControls input[type=range] { flex:1; }
+  #phasePlay { width:36px; height:30px; padding:0; font-size:12px; line-height:1; color:#dfe6f5; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.3); border-radius:6px; cursor:pointer; font-family:inherit; flex:none; }
+  #phaseCaption { font-size:12px; color:#9aa6c2; line-height:1.55; margin:8px 2px 14px; }
   /* Accessibility */
   .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
   button:focus-visible, [tabindex]:focus-visible, input:focus-visible { outline:3px solid #ffd877; outline-offset:2px; }
@@ -126,6 +140,7 @@
     <button id="compareBtn" type="button" aria-pressed="false">📏 So sánh kích thước</button>
     <button id="distanceBtn" type="button" aria-pressed="false">🛰️ Khoảng cách thật</button>
     <button id="weightBtn" type="button">⚖️ Cân nặng của em</button>
+    <button id="phaseBtn" type="button">🌗 Pha &amp; Nhật/Nguyệt thực</button>
     <div class="lbl-sec" id="uiSimDate" style="margin-top:8px;">NGÀY MÔ PHỎNG</div>
     <div id="simDate" style="font-size:13px;color:#dfe6f5;margin-bottom:10px;">—</div>
     <div class="lbl-sec" id="uiTime">ĐIỀU KHIỂN THỜI GIAN</div>
@@ -202,6 +217,21 @@
     </div>
   </div>
 
+  <div id="phasePanel">
+    <div class="quiz-card phase-card">
+      <div id="phaseTitle" class="quiz-card-title">Pha Mặt Trăng &amp; Nhật/Nguyệt thực</div>
+      <canvas id="phaseCanvas" width="560" height="300"></canvas>
+      <div id="phaseReadout"><span id="phaseEmoji">🌑</span><span id="phaseName"></span></div>
+      <div id="phaseEvent"></div>
+      <div id="phaseControls">
+        <button id="phasePlay" type="button" aria-label="Tạm dừng">❚❚</button>
+        <input type="range" id="phaseSlider" min="0" max="360" step="1" value="0" aria-label="Vị trí Mặt Trăng trên quỹ đạo" />
+      </div>
+      <div id="phaseCaption"></div>
+      <button id="phaseClose" type="button">Đóng</button>
+    </div>
+  </div>
+
   <div id="tourBar">
     <button id="tourPrev" aria-label="Trước">◀</button>
     <button id="tourPlay" aria-label="Tạm dừng tour">❚❚</button>
@@ -272,6 +302,10 @@ const I18N = {
       narrateNoVoice:'Thiết bị chưa có giọng đọc tiếng Việt. Hãy cài giọng tiếng Việt trong Cài đặt hệ thống để nghe đúng nhé.',
       soundOnLabel:'Bật tiếng', soundOffLabel:'Tắt tiếng',
       weightStart:'⚖️ Cân nặng của em', weightTitle:'Em nặng bao nhiêu ngoài vũ trụ?', weightAsk:'Cân nặng của em (kg):',
+      phaseStart:'🌗 Pha & Nhật/Nguyệt thực', phaseTitle:'Pha Mặt Trăng & Nhật/Nguyệt thực', phaseClose:'Đóng',
+      phaseCaption:'Kéo thanh trượt để Mặt Trăng đi quanh Trái Đất — phần được Mặt Trời chiếu sáng đổi dần tạo ra các pha. Khi ba thiên thể thẳng hàng sẽ có nhật thực (Trăng non) hoặc nguyệt thực (Trăng tròn). Ngoài đời quỹ đạo Mặt Trăng hơi nghiêng nên thực không xảy ra mỗi tháng.',
+      phaseNames:{new:'Trăng non',waxcres:'Trăng lưỡi liềm đầu tháng',firstq:'Trăng bán nguyệt đầu tháng',waxgib:'Trăng khuyết đầu tháng',full:'Trăng tròn',wangib:'Trăng khuyết cuối tháng',lastq:'Trăng bán nguyệt cuối tháng',wancres:'Trăng lưỡi liềm cuối tháng'},
+      phaseSolar:'🌑 Nhật thực — Mặt Trăng che Mặt Trời!', phaseLunar:'🔴 Nguyệt thực — Trái Đất che Mặt Trăng!', phaseNone:'',
       quizStart:'🎯 Đố vui', quizCorrect:'Chính xác! 🎉', quizWrong:'Chưa đúng rồi 😅', quizReplay:'Chơi lại', quizClose:'Đóng',
       quizMeta:(i,n,s)=>'Câu '+i+'/'+n+' · Điểm: '+s, quizResult:(s,n)=>'Bé trả lời đúng '+s+'/'+n+' câu!',
       quizSetupTitle:'Chọn chủ đề & số câu', quizBegin:'Bắt đầu',
@@ -325,6 +359,10 @@ const I18N = {
       narrateNoVoice:'This device has no voice for the selected language. Install one in system settings to hear it.',
       soundOnLabel:'Sound on', soundOffLabel:'Sound off',
       weightStart:'⚖️ Your weight', weightTitle:'How much do you weigh out there?', weightAsk:'Your weight (kg):',
+      phaseStart:'🌗 Phases & eclipses', phaseTitle:'Moon Phases & Eclipses', phaseClose:'Close',
+      phaseCaption:'Drag the slider to move the Moon around Earth — the sunlit part you see changes, making the phases. When all three line up you get a solar eclipse (New Moon) or lunar eclipse (Full Moon). In real life the Moon\'s orbit is slightly tilted, so eclipses don\'t happen every month.',
+      phaseNames:{new:'New Moon',waxcres:'Waxing crescent',firstq:'First quarter',waxgib:'Waxing gibbous',full:'Full Moon',wangib:'Waning gibbous',lastq:'Last quarter',wancres:'Waning crescent'},
+      phaseSolar:'🌑 Solar eclipse — the Moon covers the Sun!', phaseLunar:'🔴 Lunar eclipse — Earth\'s shadow covers the Moon!', phaseNone:'',
       quizStart:'🎯 Quiz', quizCorrect:'Correct! 🎉', quizWrong:'Not quite 😅', quizReplay:'Play again', quizClose:'Close',
       quizMeta:(i,n,s)=>'Q '+i+'/'+n+' · Score: '+s, quizResult:(s,n)=>'You got '+s+'/'+n+' right!',
       quizSetupTitle:'Choose topic & length', quizBegin:'Start',
@@ -859,6 +897,11 @@ function boot(){
     document.getElementById('weightTitle').textContent = u.weightTitle;
     document.getElementById('weightAsk').textContent = u.weightAsk;
     if (weightPanel.classList.contains('on')) renderWeights();
+    document.getElementById('phaseBtn').textContent = u.phaseStart;
+    document.getElementById('phaseTitle').textContent = u.phaseTitle;
+    document.getElementById('phaseCaption').textContent = u.phaseCaption;
+    document.getElementById('phaseClose').textContent = u.phaseClose;
+    if (typeof updatePhaseReadout === 'function') updatePhaseReadout();
     document.getElementById('spdOut').textContent = u.speed(speed);
     document.getElementById('loadTxt').textContent = u.loading;
     document.getElementById('nwTitle').textContent = u.nwTitle;
@@ -883,6 +926,7 @@ function boot(){
     params.set('lang', lang);
     if (typeof compareMode !== 'undefined' && compareMode) params.set('view', 'compare');
     else if (typeof distanceMode !== 'undefined' && distanceMode) params.set('view', 'distance');
+    else if (typeof phaseMode !== 'undefined' && phaseMode) params.set('view', 'phase');
     history.replaceState(null, '', location.pathname + '?' + params.toString());
   }
   document.getElementById('shareBtn').addEventListener('click', () => {
@@ -1023,7 +1067,7 @@ function boot(){
     scheduleNext(willPlay ? 15000 : 7500);
   }
   function startTour(){
-    closeQuiz(); setCompare(false); setDistance(false);
+    closeQuiz(); setCompare(false); setDistance(false); closePhase();
     touring = true; tourPaused = false;
     tourBar.classList.add('on');
     tourPlayBtn.textContent = '❚❚';
@@ -1101,7 +1145,7 @@ function boot(){
     document.querySelectorAll('#countChips .chip').forEach(c => c.classList.toggle('active', +c.dataset.count === quizCount));
   }
   function openQuizSetup(){
-    stopTour(); setCompare(false); setDistance(false); closeQuiz();
+    stopTour(); setCompare(false); setDistance(false); closeQuiz(); closePhase();
     document.getElementById('quizBestLine').textContent = bestLineText();
     syncSetupUI();
     document.getElementById('quizSetup').classList.add('on');
@@ -1171,7 +1215,7 @@ function boot(){
     if (on === compareMode) return;
     compareMode = on;
     if (on){
-      stopTour(); closeQuiz(); setDistance(false);
+      stopTour(); closeQuiz(); setDistance(false); closePhase();
       savedCam = {theta:camTheta, phi:camPhi, dist:targetDist};
       for (const b of bodies){ b.mesh.visible = false; if (b.orbitLine) b.orbitLine.visible = false; }
       beltGroup.visible = false;
@@ -1207,7 +1251,7 @@ function boot(){
     if (on === distanceMode) return;
     distanceMode = on;
     if (on){
-      stopTour(); closeQuiz(); setCompare(false);
+      stopTour(); closeQuiz(); setCompare(false); closePhase();
       savedCamD = {theta:camTheta, phi:camPhi, dist:targetDist};
       for (const b of bodies){ b.mesh.visible = false; if (b.orbitLine) b.orbitLine.visible = false; }
       beltGroup.visible = false;
@@ -1252,7 +1296,7 @@ function boot(){
     }
   }
   function openWeight(){
-    stopTour();
+    stopTour(); closePhase();
     document.getElementById('quizSetup').classList.remove('on');
     document.getElementById('quizResult').classList.remove('on');
     renderWeights();
@@ -1264,13 +1308,135 @@ function boot(){
   document.getElementById('weightClose').addEventListener('click', closeWeight);
   weightInput.addEventListener('input', renderWeights);
 
+  // ---- Phase & eclipse mini-scene (self-contained renderer) ----
+  const PR = 4.6, EARTH_R = 1.3, MOON_R = 0.42;            // moon-orbit radius, earth/moon radii
+  const PHASE_EMOJI = {new:'🌑',waxcres:'🌒',firstq:'🌓',waxgib:'🌔',full:'🌕',wangib:'🌖',lastq:'🌗',wancres:'🌘'};
+  const PHASE_SEG = ['new','waxcres','firstq','waxgib','full','wangib','lastq','wancres'];
+  const ECL_TOL = 7;                                       // ° of alignment that counts as an eclipse
+  let phaseMode = false, phaseAngle = 0, phasePlaying = !reduceMotion;
+  let phaseInited = false, phaseRAF = null, phaseLastT = null;
+  let pScene, pCam, pRenderer, pEarth, pMoon, pMoonMat, pSpot;
+  const phasePanel = document.getElementById('phasePanel');
+  const phaseCanvas = document.getElementById('phaseCanvas');
+  const phaseSlider = document.getElementById('phaseSlider');
+  const phasePlayBtn = document.getElementById('phasePlay');
+
+  function phaseKey(deg){ const a = ((deg % 360) + 360) % 360; return PHASE_SEG[Math.floor(((a + 22.5) % 360) / 45)]; }
+  function eclipseType(deg){ const a = ((deg % 360) + 360) % 360;
+    if (a <= ECL_TOL || a >= 360 - ECL_TOL) return 'solar';
+    if (Math.abs(a - 180) <= ECL_TOL) return 'lunar';
+    return null; }
+
+  function updatePhaseReadout(){
+    if (!phaseMode) return;
+    const u = T().ui, key = phaseKey(phaseAngle), ecl = eclipseType(phaseAngle);
+    document.getElementById('phaseEmoji').textContent = PHASE_EMOJI[key];
+    document.getElementById('phaseName').textContent = u.phaseNames[key];
+    document.getElementById('phaseEvent').textContent = ecl === 'solar' ? u.phaseSolar : ecl === 'lunar' ? u.phaseLunar : u.phaseNone;
+  }
+  function syncPhasePlayBtn(){
+    phasePlayBtn.textContent = phasePlaying ? '❚❚' : '▶';
+    phasePlayBtn.setAttribute('aria-label', phasePlaying ? (lang === 'vi' ? 'Tạm dừng' : 'Pause') : (lang === 'vi' ? 'Chạy' : 'Play'));
+  }
+
+  function initPhaseScene(){
+    if (phaseInited) return;
+    phaseInited = true;
+    pRenderer = new THREE.WebGLRenderer({canvas:phaseCanvas, antialias:true});
+    pRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    pScene = new THREE.Scene();
+    pCam = new THREE.PerspectiveCamera(42, 16/10, 0.1, 200);
+    pCam.position.set(0.5, 10.6, 9); pCam.lookAt(0, -0.4, 0);
+    pScene.add(new THREE.AmbientLight(0x223046, 0.5));
+    const sun = new THREE.DirectionalLight(0xffffff, 1.5);
+    sun.position.set(1, 0.08, 0);                          // light travels from +X toward Earth
+    pScene.add(sun);
+    // Sun marker far on +X
+    const sunMesh = new THREE.Mesh(new THREE.SphereGeometry(1.5, 28, 20), new THREE.MeshBasicMaterial({color:0xffd24a}));
+    sunMesh.position.set(15, 1.1, 0); pScene.add(sunMesh);
+    const sunGlow = new THREE.Mesh(new THREE.SphereGeometry(2.3, 28, 20), new THREE.MeshBasicMaterial({color:0xffd877, transparent:true, opacity:0.18, blending:THREE.AdditiveBlending, depthWrite:false}));
+    sunGlow.position.copy(sunMesh.position); pScene.add(sunGlow);
+    // orbit guide ring
+    const ring = new THREE.Mesh(new THREE.RingGeometry(PR - 0.03, PR + 0.03, 96), new THREE.MeshBasicMaterial({color:0x39466e, side:THREE.DoubleSide, transparent:true, opacity:0.5}));
+    ring.rotation.x = Math.PI/2; pScene.add(ring);
+    // Earth (lit by the directional sun-light)
+    pEarth = new THREE.Mesh(new THREE.SphereGeometry(EARTH_R, 48, 36), new THREE.MeshPhongMaterial({color:0x2a6bd6, emissive:0x081427, shininess:10}));
+    pScene.add(pEarth);
+    pScene.add(new THREE.Mesh(new THREE.SphereGeometry(EARTH_R*1.08, 32, 24), new THREE.MeshBasicMaterial({color:0x6fa8e0, transparent:true, opacity:0.16, side:THREE.BackSide, blending:THREE.AdditiveBlending, depthWrite:false})));
+    // Moon
+    pMoonMat = new THREE.MeshPhongMaterial({color:0xc9ccd4, emissive:0x000000, shininess:2});
+    pMoon = new THREE.Mesh(new THREE.SphereGeometry(MOON_R, 40, 28), pMoonMat);
+    pScene.add(pMoon);
+    // solar-eclipse shadow spot on Earth's sun-facing side
+    pSpot = new THREE.Mesh(new THREE.CircleGeometry(0.5, 28), new THREE.MeshBasicMaterial({color:0x05070d, transparent:true, opacity:0.8}));
+    pSpot.visible = false; pScene.add(pSpot);
+  }
+
+  function sizePhaseRenderer(){
+    if (!phaseInited) return;
+    const w = phaseCanvas.clientWidth || 560, h = phaseCanvas.clientHeight || 300;
+    pRenderer.setSize(w, h, false);
+    pCam.aspect = w / h; pCam.updateProjectionMatrix();
+  }
+
+  function phaseFrame(t){
+    if (!phaseMode) return;
+    if (phaseLastT === null) phaseLastT = t;
+    const dt = Math.min((t - phaseLastT) / 1000, 0.1); phaseLastT = t;
+    if (phasePlaying){
+      phaseAngle = (phaseAngle + 30 * dt) % 360;
+      phaseSlider.value = Math.round(phaseAngle);
+      updatePhaseReadout();
+    }
+    const rad = phaseAngle * Math.PI / 180;
+    pMoon.position.set(Math.cos(rad) * PR, 0, Math.sin(rad) * PR);
+    pEarth.rotation.y += 0.25 * dt;
+    const ecl = eclipseType(phaseAngle);
+    if (ecl === 'lunar'){ pMoonMat.color.setHex(0x7e2c18); pMoonMat.emissive.setHex(0x4a0f06); }
+    else { pMoonMat.color.setHex(0xc9ccd4); pMoonMat.emissive.setHex(0x000000); }
+    pSpot.visible = ecl === 'solar';
+    if (pSpot.visible){
+      const dir = pMoon.position.clone().normalize();
+      pSpot.position.copy(dir.clone().multiplyScalar(EARTH_R + 0.02));
+      pSpot.lookAt(dir.clone().multiplyScalar(EARTH_R + 1));
+    }
+    pRenderer.render(pScene, pCam);
+    phaseRAF = requestAnimationFrame(phaseFrame);
+  }
+
+  function setPhase(on){
+    if (on === phaseMode) return;
+    phaseMode = on;
+    if (on){
+      stopTour(); closeQuiz(); setCompare(false); setDistance(false); closeWeight();
+      initPhaseScene(); sizePhaseRenderer();
+      if (reduceMotion) phasePlaying = false;
+      syncPhasePlayBtn(); updatePhaseReadout();
+      phasePanel.classList.add('on');
+      if (isMobile) panel.classList.remove('open');
+      announce(T().ui.phaseTitle);
+      phaseLastT = null; phaseRAF = requestAnimationFrame(phaseFrame);
+    } else {
+      phasePanel.classList.remove('on');
+      if (phaseRAF){ cancelAnimationFrame(phaseRAF); phaseRAF = null; }
+    }
+    if (typeof updateURL === 'function') updateURL();
+  }
+  function closePhase(){ setPhase(false); }
+  document.getElementById('phaseBtn').addEventListener('click', () => setPhase(true));
+  document.getElementById('phaseClose').addEventListener('click', () => setPhase(false));
+  phaseSlider.addEventListener('input', () => { phaseAngle = Number(phaseSlider.value); phasePlaying = false; syncPhasePlayBtn(); updatePhaseReadout(); });
+  phasePlayBtn.addEventListener('click', () => { phasePlaying = !phasePlaying; phaseLastT = null; syncPhasePlayBtn(); });
+  window.addEventListener('resize', () => { if (phaseMode) sizePhaseRenderer(); });
+
   // ---- keyboard controls (accessibility) ----
   window.addEventListener('keydown', e => {
     const tag = (e.target && e.target.tagName || '').toLowerCase();
     if (tag === 'input' || tag === 'textarea') return; // để slider/ô nhập hoạt động
     const k = e.key;
     if (k === 'Escape'){
-      if (weightPanel.classList.contains('on')) closeWeight();
+      if (phaseMode) closePhase();
+      else if (weightPanel.classList.contains('on')) closeWeight();
       else if (document.getElementById('quizSetup').classList.contains('on') ||
           document.getElementById('quizResult').classList.contains('on') || quizActive) closeQuiz();
       else if (touring) stopTour();
@@ -1295,6 +1461,7 @@ function boot(){
   if (isMobile) ip.style.display = 'none';
   if (urlParams.get('view') === 'compare') setCompare(true);
   else if (urlParams.get('view') === 'distance') setDistance(true);
+  else if (urlParams.get('view') === 'phase') setPhase(true);
 
   // ---- render loop ----
   const tmp = new THREE.Vector3();

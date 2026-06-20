@@ -157,6 +157,27 @@ def main():
         check("weight includes a dwarf planet (Ceres)", ("Ceres" in wtxt), wtxt[:80])
         page.click("#weightClose"); page.wait_for_timeout(150)
 
+        # Moon phases & eclipses mini-scene
+        page.click("#compareBtn"); page.wait_for_timeout(500)   # turn on a background mode first
+        page.click("#phaseBtn"); page.wait_for_timeout(400)
+        check("phase panel opens", "on" in (page.get_attribute("#phasePanel", "class") or ""))
+        check("opening phase closes compare mode",
+              "active" not in (page.get_attribute("#compareBtn", "class") or ""))
+        check("phase readout shows a phase name", len((page.text_content("#phaseName") or "").strip()) > 0)
+        # Full Moon (180°) -> lunar eclipse event
+        page.eval_on_selector("#phaseSlider", "el=>{el.value=180; el.dispatchEvent(new Event('input',{bubbles:true}));}")
+        page.wait_for_timeout(200)
+        check("full moon -> lunar eclipse event", "🔴" in (page.text_content("#phaseEvent") or ""),
+              page.text_content("#phaseEvent"))
+        # New Moon (0°) -> solar eclipse event
+        page.eval_on_selector("#phaseSlider", "el=>{el.value=0; el.dispatchEvent(new Event('input',{bubbles:true}));}")
+        page.wait_for_timeout(200)
+        check("new moon -> solar eclipse event", "🌑" in (page.text_content("#phaseEvent") or ""),
+              page.text_content("#phaseEvent"))
+        # Escape closes the phase overlay
+        page.keyboard.press("Escape"); page.wait_for_timeout(300)
+        check("Escape closes phase overlay", "on" not in (page.get_attribute("#phasePanel", "class") or ""))
+
         # Deep-link: state reflected in URL + loadable from URL
         check("URL has deep-link params", "body=" in page.url and "lang=" in page.url, page.url)
         page2 = browser.new_page(viewport={"width": 1100, "height": 700})
