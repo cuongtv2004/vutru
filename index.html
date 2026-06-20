@@ -519,6 +519,14 @@ function boot(){
   }
   starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
   scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({color:0xb9c4e0, size:1.4, sizeAttenuation:false})));
+  // lớp sao sáng hơn, ít hơn — tạo chiều sâu
+  const starGeo2 = new THREE.BufferGeometry(), starPos2 = [];
+  for (let i=0;i<180;i++){
+    const r = 900 + Math.random()*800, th = Math.random()*Math.PI*2, ph = Math.acos(2*Math.random()-1);
+    starPos2.push(r*Math.sin(ph)*Math.cos(th), r*Math.cos(ph), r*Math.sin(ph)*Math.sin(th));
+  }
+  starGeo2.setAttribute('position', new THREE.Float32BufferAttribute(starPos2, 3));
+  scene.add(new THREE.Points(starGeo2, new THREE.PointsMaterial({color:0xffffff, size:2.6, sizeAttenuation:false, transparent:true, opacity:0.9})));
 
   // ---- bodies ----
   const bodies = [];
@@ -582,6 +590,14 @@ function boot(){
     }
     if (cfg.moons) for (const m of cfg.moons) byId[m.id] = makeBody({...m, fly: m.r*7+2.5}, b);
   }
+
+  // ---- visual polish: hào quang Mặt Trời + khí quyển Trái Đất ----
+  for (const [r, op] of [[13, 0.22], [17, 0.12], [23, 0.06]]){
+    byId.sun.mesh.add(new THREE.Mesh(new THREE.SphereGeometry(r, 32, 24),
+      new THREE.MeshBasicMaterial({color:0xffd57a, transparent:true, opacity:op, blending:THREE.AdditiveBlending, depthWrite:false})));
+  }
+  byId.earth.mesh.add(new THREE.Mesh(new THREE.SphereGeometry(byId.earth.r*1.12, 36, 26),
+    new THREE.MeshBasicMaterial({color:0x6fa8e0, transparent:true, opacity:0.22, side:THREE.BackSide, blending:THREE.AdditiveBlending, depthWrite:false})));
 
   // ---- asteroid belt (InstancedMesh: 4 draw calls instead of 260) ----
   const beltGroup = new THREE.Group();
@@ -691,6 +707,12 @@ function boot(){
     labelLayer.appendChild(lbl);
     b.label = lbl;
   }
+
+  // vòng sáng đánh dấu thiên thể đang chọn
+  const selRing = new THREE.Mesh(new THREE.RingGeometry(1.18, 1.32, 56),
+    new THREE.MeshBasicMaterial({color:0x9fc0ff, transparent:true, opacity:0.8, side:THREE.DoubleSide, depthWrite:false}));
+  selRing.visible = false;
+  scene.add(selRing);
 
   let selected = null, camDist = 32, camTheta = 0.8, camPhi = 1.15, targetDist = 32;
   let days = 0, playing = true, speed = 10, showLabels = true;
@@ -1173,6 +1195,14 @@ function boot(){
       tmp.y + camDist*Math.cos(camPhi),
       tmp.z + camDist*Math.sin(camPhi)*Math.sin(camTheta));
     camera.lookAt(tmp);
+
+    if (!compareMode && !distanceMode && selected){
+      selected.mesh.getWorldPosition(tmp);
+      selRing.position.copy(tmp);
+      selRing.scale.setScalar(selected.r * 1.7);
+      selRing.lookAt(camera.position);
+      selRing.visible = true;
+    } else selRing.visible = false;
 
     const w = wrap.clientWidth, h = wrap.clientHeight;
     const projLabel = (mesh, label) => {

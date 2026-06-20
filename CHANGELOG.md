@@ -46,6 +46,12 @@ Dựa trên ý tưởng từ [locphamnguyen/solar-system-3d](https://github.com/
 - Nhãn hiện khoảng cách từng hành tinh (vd "Sao Mộc · 5,2 AU"); caption nhấn mạnh Sao Hải Vương xa 30 AU.
 - Cho thấy các hành tinh trong dồn sát Mặt Trời còn nhóm ngoài cách rất xa. Loại trừ lẫn nhau với so-sánh/tour/quiz.
 
+## Phase 9 — Polish hình ảnh
+- **Hào quang Mặt Trời** nhiều lớp (additive blending) trông rực rỡ hơn.
+- **Khí quyển Trái Đất**: viền sáng xanh quanh hành tinh.
+- **Lớp sao sáng** thứ hai tạo chiều sâu cho nền vũ trụ.
+- **Vòng sáng** đánh dấu thiên thể đang chọn (luôn hướng về camera).
+
 ## Hạ tầng
 - **Test harness** `tests/runtime.py` (Playwright + Chromium headless) + CI GitHub Actions:
   bắt lỗi JS và kiểm thử tour/quiz/so-sánh/i18n trên mỗi PR.
