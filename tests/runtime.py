@@ -88,6 +88,7 @@ def main():
         check("tour bar visible",
               page.eval_on_selector("#tourBar", "e=>getComputedStyle(e).display") != "none")
         p0 = page.text_content("#tourPos")
+        check("tour includes dwarf planets (14 stops)", (p0 or "").endswith("/14"), p0)
         page.click("#tourNext"); page.wait_for_timeout(400)
         check("tour advances", page.text_content("#tourPos") != p0, f"{p0} -> {page.text_content('#tourPos')}")
         page.click("#tourExit"); page.wait_for_timeout(300)
@@ -95,6 +96,9 @@ def main():
         # Quiz: setup screen -> begin -> play through -> result + high score
         page.click("#quizStartBtn"); page.wait_for_timeout(400)
         check("quiz setup overlay shown", "on" in (page.get_attribute("#quizSetup", "class") or ""))
+        page.click('#topicChips .chip[data-topic="dwarf"]'); page.wait_for_timeout(150)
+        check("dwarf topic chip activates",
+              "active" in (page.get_attribute('#topicChips .chip[data-topic="dwarf"]', "class") or ""))
         page.click('#topicChips .chip[data-topic="size"]'); page.wait_for_timeout(150)
         check("topic chip activates",
               "active" in (page.get_attribute('#topicChips .chip[data-topic="size"]', "class") or ""))
@@ -147,9 +151,10 @@ def main():
         check("weight panel opens", "on" in (page.get_attribute("#weightPanel", "class") or ""))
         page.fill("#weightInput", "100"); page.wait_for_timeout(200)
         rows = page.eval_on_selector_all("#weightList .wrow", "els=>els.length")
-        check("weight list populated", rows >= 8, f"{rows} rows")
+        check("weight list populated (incl. dwarf planets)", rows >= 15, f"{rows} rows")
         wtxt = page.text_content("#weightList") or ""
         check("weight computed (100kg -> Sun 2700)", "2700" in wtxt, wtxt[:60])
+        check("weight includes a dwarf planet (Ceres)", ("Ceres" in wtxt), wtxt[:80])
         page.click("#weightClose"); page.wait_for_timeout(150)
 
         # Deep-link: state reflected in URL + loadable from URL
