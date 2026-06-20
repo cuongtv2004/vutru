@@ -56,6 +56,25 @@
   #tourBar button { width:34px; height:34px; padding:0; font-size:14px; line-height:1; color:#dfe6f5; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.25); border-radius:50%; cursor:pointer; }
   #tourBar button:hover { background:rgba(255,255,255,0.18); }
   #tourPos { font-size:12px; color:#cfd7ea; min-width:34px; text-align:center; }
+  /* Quiz */
+  #quizStartBtn { width:100%; margin:6px 0 2px; padding:8px; font-size:12px; font-weight:bold; color:#0a1e14; background:linear-gradient(90deg,#5fe0a0,#8ff0c4); border:none; border-radius:8px; cursor:pointer; font-family:inherit; }
+  #quizStartBtn:hover { filter:brightness(1.08); }
+  #quizBar { position:absolute; left:50%; top:calc(12px + env(safe-area-inset-top)); transform:translateX(-50%); z-index:40; display:none; flex-direction:column; gap:5px; width:max-content; max-width:min(92vw,520px); padding:12px 40px 11px 16px; background:rgba(8,12,24,0.95); border:1px solid rgba(120,200,160,0.4); border-radius:14px; text-align:center; }
+  #quizBar.on { display:flex; }
+  #quizQ { font-size:14px; font-weight:bold; color:#eef6ef; line-height:1.4; }
+  #quizMetaRow { display:flex; gap:12px; align-items:center; justify-content:center; font-size:12px; }
+  #quizMeta { color:#9aa6c2; } #quizFb { font-weight:bold; }
+  #quizExit { position:absolute; top:8px; right:8px; width:26px; height:26px; padding:0; font-size:13px; line-height:1; color:#9aa6c2; background:transparent; border:none; cursor:pointer; }
+  #quizResult { position:absolute; inset:0; z-index:55; display:none; align-items:center; justify-content:center; background:rgba(4,6,12,0.72); }
+  #quizResult.on { display:flex; }
+  .quiz-card { background:#0c1326; border:1px solid rgba(255,255,255,0.2); border-radius:16px; padding:26px 28px; text-align:center; max-width:300px; }
+  #quizStars { font-size:30px; }
+  #quizResultTxt { color:#eef2fb; font-size:16px; font-weight:bold; margin:10px 0 16px; line-height:1.5; }
+  .quiz-card button { margin:4px; padding:9px 16px; font-size:13px; font-weight:bold; border:none; border-radius:8px; cursor:pointer; font-family:inherit; }
+  #quizReplay { color:#0a1e14; background:linear-gradient(90deg,#5fe0a0,#8ff0c4); }
+  #quizClose { color:#cfd7ea; background:rgba(255,255,255,0.1); }
+  .confetti { position:fixed; top:-30px; z-index:70; pointer-events:none; animation:fall linear forwards; }
+  @keyframes fall { to { transform:translateY(108vh) rotate(540deg); opacity:0.15; } }
 </style>
 </head>
 <body>
@@ -73,6 +92,7 @@
   <div id="panel">
     <div id="uiTitle" style="font-size:13px;font-weight:bold;color:#dfe6f5;letter-spacing:1px;">HỆ MẶT TRỜI</div>
     <button id="tourStartBtn" type="button">🚀 Khám phá có hướng dẫn</button>
+    <button id="quizStartBtn" type="button">🎯 Đố vui</button>
     <div class="lbl-sec" id="uiSimDate" style="margin-top:8px;">NGÀY MÔ PHỎNG</div>
     <div id="simDate" style="font-size:13px;color:#dfe6f5;margin-bottom:10px;">—</div>
     <div class="lbl-sec" id="uiTime">ĐIỀU KHIỂN THỜI GIAN</div>
@@ -100,6 +120,21 @@
     <div id="ipDesc" style="font-size:12px;color:#b6c0d8;line-height:1.65;"></div>
     <div id="ipFun"></div>
     <div id="ipStats" style="margin-top:12px;border-top:1px solid rgba(120,140,190,0.3);padding-top:10px;"></div>
+  </div>
+
+  <div id="quizBar">
+    <button id="quizExit" aria-label="Thoát đố vui">✕</button>
+    <div id="quizQ"></div>
+    <div id="quizMetaRow"><span id="quizMeta"></span><span id="quizFb"></span></div>
+  </div>
+
+  <div id="quizResult">
+    <div class="quiz-card">
+      <div id="quizStars">⭐</div>
+      <div id="quizResultTxt"></div>
+      <button id="quizReplay" type="button">Chơi lại</button>
+      <button id="quizClose" type="button">Đóng</button>
+    </div>
   </div>
 
   <div id="tourBar">
@@ -158,7 +193,10 @@ const I18N = {
       bodies:'THIÊN THỂ', orbit:'Đường quỹ đạo', labels:'Nhãn tên', belt:'Vành tiểu hành tinh',
       hintDesktop:'Kéo = xoay · Lăn chuột = phóng to · Bấm = bay tới',
       hintMobile:'1 ngón = xoay · Chụm = phóng to · Chạm = bay tới',
-      speed:n=>n+' ngày/giây', tourStart:'🚀 Khám phá có hướng dẫn', narrate:'Đọc lời kể', loading:'Đang tải vũ trụ…',
+      speed:n=>n+' ngày/giây', tourStart:'🚀 Khám phá có hướng dẫn', narrate:'Đọc lời kể',
+      quizStart:'🎯 Đố vui', quizCorrect:'Chính xác! 🎉', quizWrong:'Chưa đúng rồi 😅', quizReplay:'Chơi lại', quizClose:'Đóng',
+      quizMeta:(i,n,s)=>'Câu '+i+'/'+n+' · Điểm: '+s, quizResult:(s,n)=>'Bé trả lời đúng '+s+'/'+n+' câu!',
+      loading:'Đang tải vũ trụ…',
       nwTitle:'Trình duyệt không hỗ trợ 3D',
       nwBody:'Thiết bị hoặc trình duyệt của bạn chưa bật WebGL. Hãy thử mở bằng Chrome/Edge/Firefox mới, hoặc bật tăng tốc phần cứng trong cài đặt.' },
     bodies:{
@@ -190,7 +228,10 @@ const I18N = {
       bodies:'BODIES', orbit:'Orbit lines', labels:'Labels', belt:'Asteroid belt',
       hintDesktop:'Drag = orbit · Scroll = zoom · Click = fly to',
       hintMobile:'1 finger = orbit · Pinch = zoom · Tap = fly to',
-      speed:n=>n+' days/s', tourStart:'🚀 Guided tour', narrate:'Narration', loading:'Loading the universe…',
+      speed:n=>n+' days/s', tourStart:'🚀 Guided tour', narrate:'Narration',
+      quizStart:'🎯 Quiz', quizCorrect:'Correct! 🎉', quizWrong:'Not quite 😅', quizReplay:'Play again', quizClose:'Close',
+      quizMeta:(i,n,s)=>'Q '+i+'/'+n+' · Score: '+s, quizResult:(s,n)=>'You got '+s+'/'+n+' right!',
+      loading:'Loading the universe…',
       nwTitle:'Your browser does not support 3D',
       nwBody:'WebGL is not enabled on this device or browser. Try a recent Chrome/Edge/Firefox, or enable hardware acceleration in settings.' },
     bodies:{
@@ -265,6 +306,22 @@ const FUN = {
     triton:'Triton orbits backwards and erupts frozen nitrogen geysers! ❄️'
   }
 };
+
+// ---- Quiz "học mà chơi": đáp án là id thiên thể dễ bấm (Mặt Trời, 8 hành tinh, Mặt Trăng) ----
+const QUIZ = [
+  {answer:'venus',   q:{vi:'Hành tinh nào NÓNG nhất?', en:'Which planet is the HOTTEST?'}},
+  {answer:'mercury', q:{vi:'Hành tinh nào GẦN Mặt Trời nhất?', en:'Which planet is CLOSEST to the Sun?'}},
+  {answer:'earth',   q:{vi:'Hành tinh nào có SỰ SỐNG — nhà của chúng mình?', en:'Which planet has LIFE — our home?'}},
+  {answer:'mars',    q:{vi:'Hành tinh nào được gọi là "Hành tinh ĐỎ"?', en:'Which is the "RED Planet"?'}},
+  {answer:'jupiter', q:{vi:'Hành tinh nào LỚN nhất?', en:'Which planet is the BIGGEST?'}},
+  {answer:'saturn',  q:{vi:'Hành tinh nào có VÀNH ĐAI nổi tiếng?', en:'Which planet has the famous RINGS?'}},
+  {answer:'uranus',  q:{vi:'Hành tinh nào nằm NGHIÊNG, lăn quanh Mặt Trời?', en:'Which planet is TIPPED on its side?'}},
+  {answer:'neptune', q:{vi:'Hành tinh nào XA Mặt Trời nhất?', en:'Which planet is FARTHEST from the Sun?'}},
+  {answer:'neptune', q:{vi:'Hành tinh nào có GIÓ thổi nhanh nhất?', en:'Which planet has the FASTEST winds?'}},
+  {answer:'sun',     q:{vi:'Đâu là NGÔI SAO ở trung tâm hệ?', en:'Which is the STAR at the center?'}},
+  {answer:'moon',    q:{vi:'Đâu là VỆ TINH của Trái Đất?', en:"Which is Earth's MOON?"}},
+  {answer:'mercury', q:{vi:'Hành tinh nào NHỎ nhất?', en:'Which planet is the SMALLEST?'}}
+];
 </script>
 
 <!-- Three.js: local first, CDN fallback -->
@@ -485,7 +542,7 @@ function boot(){
     row.type = 'button';
     row.className = 'body-row' + (b.indent ? ' moon' : '');
     row.innerHTML = '<span class="dot" style="background:#'+b.color.toString(16).padStart(6,'0')+';"></span><span class="rowname"></span>';
-    row.addEventListener('click', () => selectBody(b));
+    row.addEventListener('click', () => pickBody(b));
     b.row = row;
     list.appendChild(row);
     const lbl = document.createElement('div');
@@ -540,6 +597,11 @@ function boot(){
     document.getElementById('uiBelt').textContent = u.belt;
     document.getElementById('uiNarrate').textContent = u.narrate;
     document.getElementById('tourStartBtn').textContent = u.tourStart;
+    document.getElementById('quizStartBtn').textContent = u.quizStart;
+    document.getElementById('quizReplay').textContent = u.quizReplay;
+    document.getElementById('quizClose').textContent = u.quizClose;
+    if (quizActive) showQuestion();
+    if (document.getElementById('quizResult').classList.contains('on')) document.getElementById('quizResultTxt').textContent = u.quizResult(score, quizSet.length);
     document.getElementById('spdOut').textContent = u.speed(speed);
     document.getElementById('loadTxt').textContent = u.loading;
     document.getElementById('nwTitle').textContent = u.nwTitle;
@@ -593,7 +655,7 @@ function boot(){
       const ray = new THREE.Raycaster();
       ray.setFromCamera(m, camera);
       const hits = ray.intersectObjects(bodies.map(b=>b.mesh));
-      if (hits.length) selectBody(hits[0].object.userData.body);
+      if (hits.length) pickBody(hits[0].object.userData.body);
     }
   }
   canvas.addEventListener('pointerup', endPointer);
@@ -661,6 +723,7 @@ function boot(){
     scheduleNext(spoke ? 13000 : 7500);
   }
   function startTour(){
+    closeQuiz();
     touring = true; tourPaused = false;
     tourBar.classList.add('on');
     tourPlayBtn.textContent = '❚❚';
@@ -685,6 +748,87 @@ function boot(){
   document.getElementById('tourPlay').addEventListener('click', toggleTourPause);
   document.getElementById('tourPrev').addEventListener('click', () => { if (touring) tourGo(tourIdx - 1); });
   document.getElementById('tourNext').addEventListener('click', () => { if (touring) tourGo(tourIdx + 1); });
+
+  // ---- Quiz "học mà chơi" ----
+  let quizActive = false, quizLock = false, quizIdx = 0, score = 0, quizSet = [], actx = null;
+  function blip(ok){
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.connect(g); g.connect(actx.destination); o.type = 'sine';
+      const t = actx.currentTime;
+      if (ok){ o.frequency.setValueAtTime(660, t); o.frequency.setValueAtTime(990, t+0.12); }
+      else { o.frequency.setValueAtTime(320, t); o.frequency.setValueAtTime(200, t+0.14); }
+      g.gain.setValueAtTime(0.14, t); g.gain.exponentialRampToValueAtTime(0.001, t+0.32);
+      o.start(t); o.stop(t+0.34);
+    } catch(e){}
+  }
+  function confetti(){
+    const em = ['✨','🌟','⭐','🎉','💫'];
+    for (let i=0;i<24;i++){
+      const s = document.createElement('div');
+      s.className = 'confetti'; s.textContent = em[i % em.length];
+      s.style.left = (Math.random()*100) + 'vw';
+      s.style.fontSize = (14 + Math.random()*18) + 'px';
+      s.style.animationDuration = (1.2 + Math.random()*1.3) + 's';
+      s.style.animationDelay = (Math.random()*0.3) + 's';
+      document.body.appendChild(s);
+      setTimeout(() => s.remove(), 2900);
+    }
+  }
+  function shuffle(a){ for (let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; }
+
+  const quizBar = document.getElementById('quizBar');
+  function updateQuizMeta(){ document.getElementById('quizMeta').textContent = T().ui.quizMeta(Math.min(quizIdx+1, quizSet.length), quizSet.length, score); }
+  function showQuestion(){
+    document.getElementById('quizQ').textContent = quizSet[quizIdx].q[lang];
+    document.getElementById('quizFb').textContent = '';
+    updateQuizMeta();
+  }
+  function startQuiz(){
+    stopTour();
+    quizSet = shuffle(QUIZ.slice()).slice(0, 6);
+    quizIdx = 0; score = 0; quizActive = true; quizLock = false;
+    document.getElementById('quizResult').classList.remove('on');
+    quizBar.classList.add('on');
+    if (isMobile) panel.classList.remove('open');
+    showQuestion();
+  }
+  function quizAnswer(id){
+    if (!quizActive || quizLock) return;
+    quizLock = true;
+    const correct = id === quizSet[quizIdx].answer;
+    const fb = document.getElementById('quizFb');
+    fb.textContent = correct ? T().ui.quizCorrect : T().ui.quizWrong;
+    fb.style.color = correct ? '#7ee08a' : '#f6896a';
+    if (correct){ score++; confetti(); blip(true); }
+    else { blip(false); selectBody(byId[quizSet[quizIdx].answer]); }
+    updateQuizMeta();
+    setTimeout(() => {
+      quizIdx++; quizLock = false;
+      if (quizIdx >= quizSet.length) endQuiz(); else showQuestion();
+    }, correct ? 1400 : 2000);
+  }
+  function endQuiz(){
+    quizActive = false;
+    quizBar.classList.remove('on');
+    document.getElementById('quizResultTxt').textContent = T().ui.quizResult(score, quizSet.length);
+    const stars = Math.max(1, Math.round(score / quizSet.length * 3));
+    document.getElementById('quizStars').textContent = '⭐'.repeat(stars);
+    document.getElementById('quizResult').classList.add('on');
+    if (score === quizSet.length) confetti();
+  }
+  function closeQuiz(){
+    quizActive = false; quizLock = false;
+    quizBar.classList.remove('on');
+    document.getElementById('quizResult').classList.remove('on');
+  }
+  function pickBody(b){ selectBody(b); if (quizActive && !quizLock) quizAnswer(b.id); }
+
+  document.getElementById('quizStartBtn').addEventListener('click', startQuiz);
+  document.getElementById('quizExit').addEventListener('click', closeQuiz);
+  document.getElementById('quizReplay').addEventListener('click', startQuiz);
+  document.getElementById('quizClose').addEventListener('click', closeQuiz);
 
   applyLang();
   selectBody(byId.sun);

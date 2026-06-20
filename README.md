@@ -49,8 +49,8 @@ solar-system/
 
 ## 🗺️ Lộ trình tiếp theo (cho mục tiêu giáo dục)
 
-- [ ] **Phase 1** — Chế độ "Khám phá có hướng dẫn" (camera tự bay + lời kể), fun facts đơn giản cho trẻ.
-- [ ] **Phase 2** — Quiz học mà chơi ("Hành tinh nào nóng nhất?" → bấm chọn), hiệu ứng thưởng.
+- [x] **Phase 1** — Chế độ "Khám phá có hướng dẫn" (camera tự bay + lời kể), fun facts đơn giản cho trẻ.
+- [x] **Phase 2** — Quiz học mà chơi ("Hành tinh nào nóng nhất?" → bấm chọn), hiệu ứng thưởng (confetti + âm thanh).
 - [ ] **Phase 3** — Toggle "Kích thước thật vs Dễ nhìn" để dạy về tỉ lệ vũ trụ.
 
 ## 📜 Giấy phép & nguồn
