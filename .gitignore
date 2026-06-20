@@ -1,0 +1,11 @@
+# Folder tham khảo (sẽ xóa)
+solar-system-3d/
+
+# Asset (three.js + texture) ĐƯỢC commit để GitHub Pages tự phục vụ, không phụ thuộc CDN.
+# Nếu muốn repo gọn (chỉ dev, không host), bỏ comment 2 dòng dưới:
+# assets/vendor/
+# assets/textures/
+
+# Hệ thống
+.DS_Store
+Thumbs.db

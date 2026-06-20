@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Hệ Mặt Trời 3D — Khám phá vũ trụ</title>
+<meta name="description" content="Mô phỏng hệ mặt trời 3D tương tác cho các bé học tập: Mặt Trời, 8 hành tinh, các mặt trăng và vành đai tiểu hành tinh.">
+<meta property="og:title" content="Hệ Mặt Trời 3D">
+<meta property="og:description" content="Khám phá hệ mặt trời 3D ngay trên trình duyệt — dành cho các bé học tập.">
+<meta property="og:type" content="website">
+<style>
+  html, body { margin:0; padding:0; height:100%; background:#06080f; overflow:hidden; font-family:Arial,Helvetica,sans-serif; }
+  #wrap { position:relative; width:100%; height:100%; }
+  canvas { display:block; width:100%; height:100%; cursor:grab; touch-action:none; }
+  #labels { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+  .corner-btn { position:absolute; top:calc(10px + env(safe-area-inset-top)); width:40px; height:40px; padding:0; font-size:18px; line-height:1; color:#dfe6f5; background:rgba(8,12,24,0.85); border:1px solid rgba(255,255,255,0.3); border-radius:8px; cursor:pointer; z-index:30; }
+  #menuBtn { left:10px; display:none; }
+  #langBtn { right:58px; font-size:13px; font-weight:bold; }
+  #musicBtn { right:10px; font-size:16px; }
+  #panel { position:absolute; top:0; left:0; bottom:0; width:172px; background:rgba(8,12,24,0.92); padding:12px; padding-top:calc(12px + env(safe-area-inset-top)); overflow-y:auto; box-sizing:border-box; z-index:20; transition:transform 0.25s; }
+  #infoPanel { position:absolute; top:0; right:0; bottom:0; width:210px; background:rgba(8,12,24,0.94); padding:14px; padding-top:calc(14px + env(safe-area-inset-top)); overflow-y:auto; box-sizing:border-box; z-index:20; }
+  .lbl-sec { font-size:11px; color:#7c87a3; margin-top:10px; }
+  .chk { display:flex; gap:6px; font-size:12px; color:#c8d1e6; margin:4px 0; align-items:center; cursor:pointer; }
+  .chk input { margin:0; }
+  /* Body list rows are real buttons for keyboard accessibility */
+  .body-row { display:flex; align-items:center; gap:6px; width:100%; text-align:left; padding:6px; margin:1px 0; border:none; border-radius:6px; cursor:pointer; font-size:12px; color:#c8d1e6; background:transparent; font-family:inherit; }
+  .body-row:hover { background:rgba(95,125,220,0.18); }
+  .body-row:focus-visible { outline:2px solid #6f8df0; outline-offset:1px; }
+  .body-row.sel { background:rgba(95,125,220,0.35); }
+  .body-row.moon { margin-left:14px; font-size:11px; color:#9aa6c2; }
+  .dot { width:8px; height:8px; border-radius:50%; flex:none; }
+  @media (max-width: 700px) {
+    #menuBtn { display:block; }
+    #langBtn { right:58px; }
+    #panel { width:190px; transform:translateX(-105%); }
+    #panel.open { transform:none; }
+    #infoPanel { width:76%; max-width:250px; display:none; }
+  }
+  /* Loading overlay */
+  #loader { position:absolute; inset:0; z-index:50; background:#06080f; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; transition:opacity 0.6s; }
+  #loader.hide { opacity:0; pointer-events:none; }
+  .planet-spin { width:54px; height:54px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #ffe08a, #f6962a 60%, #b9531a); box-shadow:0 0 26px rgba(246,150,42,0.7); animation:spin 2.4s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  #loadTxt { color:#cfd7ea; font-size:14px; letter-spacing:0.5px; }
+  #barWrap { width:180px; height:6px; background:rgba(255,255,255,0.12); border-radius:3px; overflow:hidden; }
+  #bar { height:100%; width:0%; background:linear-gradient(90deg,#f6c24a,#6f8df0); transition:width 0.25s; }
+  /* WebGL fallback */
+  #nowebgl { position:absolute; inset:0; z-index:60; display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px; color:#dfe6f5; }
+  #nowebgl h2 { font-size:20px; } #nowebgl p { color:#9aa6c2; max-width:340px; line-height:1.6; }
+  /* Guided tour */
+  #tourStartBtn { width:100%; margin:10px 0 2px; padding:8px; font-size:12px; font-weight:bold; color:#0a0f1e; background:linear-gradient(90deg,#f6c24a,#ffd877); border:none; border-radius:8px; cursor:pointer; font-family:inherit; }
+  #tourStartBtn:hover { filter:brightness(1.08); }
+  #ipFun { margin-top:10px; padding:9px 10px; font-size:12px; line-height:1.55; color:#fdeccb; background:rgba(246,194,74,0.12); border-left:3px solid #f6c24a; border-radius:6px; }
+  #tourBar { position:absolute; left:50%; bottom:calc(16px + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:40; display:none; align-items:center; gap:8px; padding:8px 12px; background:rgba(8,12,24,0.92); border:1px solid rgba(255,255,255,0.25); border-radius:30px; }
+  #tourBar.on { display:flex; }
+  #tourBar button { width:34px; height:34px; padding:0; font-size:14px; line-height:1; color:#dfe6f5; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.25); border-radius:50%; cursor:pointer; }
+  #tourBar button:hover { background:rgba(255,255,255,0.18); }
+  #tourPos { font-size:12px; color:#cfd7ea; min-width:34px; text-align:center; }
+</style>
+</head>
+<body>
+
+<audio id="bgm" src="assets/audio.mp3" loop preload="auto"></audio>
+
+<div id="wrap">
+  <canvas id="space"></canvas>
+  <div id="labels"></div>
+
+  <button id="menuBtn" class="corner-btn" aria-label="Mở danh sách thiên thể">☰</button>
+  <button id="langBtn" class="corner-btn" aria-label="Đổi ngôn ngữ">EN</button>
+  <button id="musicBtn" class="corner-btn" aria-label="Bật/tắt nhạc nền">♪</button>
+
+  <div id="panel">
+    <div id="uiTitle" style="font-size:13px;font-weight:bold;color:#dfe6f5;letter-spacing:1px;">HỆ MẶT TRỜI</div>
+    <button id="tourStartBtn" type="button">🚀 Khám phá có hướng dẫn</button>
+    <div class="lbl-sec" id="uiSimDate" style="margin-top:8px;">NGÀY MÔ PHỎNG</div>
+    <div id="simDate" style="font-size:13px;color:#dfe6f5;margin-bottom:10px;">—</div>
+    <div class="lbl-sec" id="uiTime">ĐIỀU KHIỂN THỜI GIAN</div>
+    <div style="display:flex;align-items:center;gap:6px;margin:4px 0;">
+      <button id="playBtn" aria-label="Tạm dừng" style="width:34px;height:26px;padding:0;font-size:11px;line-height:1;color:#dfe6f5;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.3);border-radius:6px;cursor:pointer;">❚❚</button>
+      <span id="spdOut" style="font-size:12px;color:#dfe6f5;">10 ngày/giây</span>
+    </div>
+    <input type="range" id="spd" min="0" max="200" step="1" value="10" style="width:100%;" aria-label="Tốc độ thời gian" />
+    <div class="lbl-sec" id="uiDisplay">HIỂN THỊ</div>
+    <label class="chk"><input type="checkbox" id="cbOrbit" checked /><span id="uiOrbit">Đường quỹ đạo</span></label>
+    <label class="chk"><input type="checkbox" id="cbLabel" checked /><span id="uiLabels">Nhãn tên</span></label>
+    <label class="chk"><input type="checkbox" id="cbBelt" checked /><span id="uiBelt">Vành tiểu hành tinh</span></label>
+    <label class="chk"><input type="checkbox" id="cbNarrate" /><span id="uiNarrate">Đọc lời kể</span></label>
+    <div class="lbl-sec" id="uiBodies">THIÊN THỂ</div>
+    <div id="bodyList"></div>
+    <div id="hint" style="font-size:11px;color:#5d6680;margin-top:12px;line-height:1.6;padding-bottom:8px;"></div>
+  </div>
+
+  <div id="infoPanel">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div id="ipName" style="font-size:16px;font-weight:bold;color:#eef2fb;">Mặt Trời</div>
+      <button id="ipClose" aria-label="Đóng" style="width:28px;height:28px;padding:0;font-size:15px;line-height:1;color:#9aa6c2;border:none;background:transparent;cursor:pointer;">✕</button>
+    </div>
+    <img id="ipImg" alt="" style="width:100%;height:100px;object-fit:cover;border-radius:8px;margin:10px 0;background:#101627;" />
+    <div id="ipDesc" style="font-size:12px;color:#b6c0d8;line-height:1.65;"></div>
+    <div id="ipFun"></div>
+    <div id="ipStats" style="margin-top:12px;border-top:1px solid rgba(120,140,190,0.3);padding-top:10px;"></div>
+  </div>
+
+  <div id="tourBar">
+    <button id="tourPrev" aria-label="Trước">◀</button>
+    <button id="tourPlay" aria-label="Tạm dừng tour">❚❚</button>
+    <button id="tourNext" aria-label="Tiếp">▶</button>
+    <span id="tourPos">1/9</span>
+    <button id="tourExit" aria-label="Thoát tour">✕</button>
+  </div>
+
+  <div id="loader">
+    <div class="planet-spin"></div>
+    <div id="loadTxt">Đang tải vũ trụ…</div>
+    <div id="barWrap"><div id="bar"></div></div>
+  </div>
+
+  <div id="nowebgl">
+    <h2 id="nwTitle">Trình duyệt không hỗ trợ 3D</h2>
+    <p id="nwBody">Thiết bị hoặc trình duyệt của bạn chưa bật WebGL. Hãy thử mở bằng Chrome/Edge/Firefox mới, hoặc bật tăng tốc phần cứng trong cài đặt.</p>
+  </div>
+</div>
+
+<!-- Data + i18n (language-independent geometry, language-keyed text) -->
+<script>
+// ---- Language-independent body data ----
+const DATA = [
+  {id:'sun', color:0xf6c24a, r:9, emissive:true, fly:32, tex:'sun.jpg', halo:true},
+  {id:'mercury', color:0xb5a99a, r:1.3, orbit:24, period:88, tex:'mercury.jpg'},
+  {id:'venus', color:0xe8c97a, r:2.2, orbit:35, period:225, tex:'venus.jpg'},
+  {id:'earth', color:0x4f93d8, r:2.3, orbit:48, period:365.25, tex:'earth.jpg',
+   moons:[{id:'moon', color:0xc9ccd4, r:0.7, orbit:5, period:27.3, tex:'moon.jpg'}]},
+  {id:'mars', color:0xd2694a, r:1.7, orbit:64, period:687, tex:'mars.jpg',
+   moons:[
+    {id:'phobos', color:0x9a8f85, r:0.38, orbit:3, period:0.32, tex:'moon.jpg', tint:0xb09a82, lumpy:true},
+    {id:'deimos', color:0x8a8078, r:0.32, orbit:4.4, period:1.26, tex:'moon.jpg', tint:0xc0ab90, lumpy:true}]},
+  {id:'jupiter', color:0xd9a778, r:6, orbit:100, period:4333, tex:'jupiter.jpg',
+   moons:[
+    {id:'io', color:0xe3c569, r:0.6, orbit:8.5, period:1.77, tex:'io.jpg'},
+    {id:'europa', color:0xc9c2ae, r:0.55, orbit:10.5, period:3.55, tex:'europa.jpg'},
+    {id:'ganymede', color:0xa89a88, r:0.8, orbit:12.8, period:7.15, tex:'ganymede.jpg'},
+    {id:'callisto', color:0x8f867c, r:0.75, orbit:15.2, period:16.7, tex:'callisto.jpg'}]},
+  {id:'saturn', color:0xe5cf9a, r:5.2, orbit:138, period:10759, rings:true, tex:'saturn.jpg',
+   moons:[
+    {id:'enceladus', color:0xdde4ea, r:0.4, orbit:9.5, period:1.37, tex:'moon.jpg', tint:0xe8f0f8},
+    {id:'titan', color:0xd8b06a, r:0.85, orbit:13, period:15.9, tex:'titan.webp'}]},
+  {id:'uranus', color:0x9fd8db, r:3.6, orbit:172, period:30687, tex:'uranus.jpg',
+   moons:[{id:'miranda', color:0xb8bfc9, r:0.4, orbit:6.5, period:1.41, tex:'moon.jpg', tint:0xc4ccd8}]},
+  {id:'neptune', color:0x5b7fd5, r:3.5, orbit:200, period:60190, tex:'neptune.jpg',
+   moons:[{id:'triton', color:0xc4b8c9, r:0.6, orbit:6.8, period:5.88, tex:'triton.jpg'}]}
+];
+
+const I18N = {
+  vi: {
+    locale:'vi-VN',
+    ui:{ title:'HỆ MẶT TRỜI', simDate:'NGÀY MÔ PHỎNG', time:'ĐIỀU KHIỂN THỜI GIAN', display:'HIỂN THỊ',
+      bodies:'THIÊN THỂ', orbit:'Đường quỹ đạo', labels:'Nhãn tên', belt:'Vành tiểu hành tinh',
+      hintDesktop:'Kéo = xoay · Lăn chuột = phóng to · Bấm = bay tới',
+      hintMobile:'1 ngón = xoay · Chụm = phóng to · Chạm = bay tới',
+      speed:n=>n+' ngày/giây', tourStart:'🚀 Khám phá có hướng dẫn', narrate:'Đọc lời kể', loading:'Đang tải vũ trụ…',
+      nwTitle:'Trình duyệt không hỗ trợ 3D',
+      nwBody:'Thiết bị hoặc trình duyệt của bạn chưa bật WebGL. Hãy thử mở bằng Chrome/Edge/Firefox mới, hoặc bật tăng tốc phần cứng trong cài đặt.' },
+    bodies:{
+      sun:{name:'Mặt Trời', desc:'Ngôi sao trung tâm của hệ, chiếm 99,86% tổng khối lượng. Nhiệt độ bề mặt khoảng 5.500°C, lõi đạt 15 triệu °C nhờ phản ứng nhiệt hạch biến hydro thành heli.', stats:[['Đường kính','1.392.700 km'],['Loại sao','Lùn vàng G2V'],['Tuổi','~4,6 tỷ năm'],['Nhiệt độ bề mặt','5.500°C']]},
+      mercury:{name:'Sao Thủy', desc:'Hành tinh nhỏ nhất và gần Mặt Trời nhất. Hầu như không có khí quyển nên nhiệt độ dao động cực đoan: ban ngày 427°C, ban đêm xuống -173°C.', stats:[['Đường kính','4.879 km'],['Cách Mặt Trời','0,39 AU'],['Chu kỳ quỹ đạo','88 ngày'],['Vệ tinh','0']]},
+      venus:{name:'Sao Kim', desc:'Hành tinh nóng nhất hệ (462°C) do hiệu ứng nhà kính từ khí quyển CO₂ dày đặc. Tự quay ngược chiều, nên một ngày trên Sao Kim dài hơn cả một năm của nó.', stats:[['Đường kính','12.104 km'],['Cách Mặt Trời','0,72 AU'],['Chu kỳ quỹ đạo','225 ngày'],['Vệ tinh','0']]},
+      earth:{name:'Trái Đất', desc:'Hành tinh duy nhất được biết có sự sống, với 71% bề mặt là đại dương nước lỏng. Khí quyển giàu oxy và từ trường mạnh che chắn bức xạ vũ trụ.', stats:[['Đường kính','12.742 km'],['Cách Mặt Trời','1 AU (150 triệu km)'],['Chu kỳ quỹ đạo','365,3 ngày'],['Vệ tinh','1']]},
+      moon:{name:'Mặt Trăng', desc:'Vệ tinh tự nhiên duy nhất của Trái Đất, hình thành khoảng 4,5 tỷ năm trước. Luôn quay một mặt về phía Trái Đất do khóa thủy triều.', stats:[['Đường kính','3.475 km'],['Cách Trái Đất','384.400 km'],['Chu kỳ quỹ đạo','27,3 ngày']]},
+      mars:{name:'Sao Hỏa', desc:'"Hành tinh đỏ" — màu sắc đến từ oxit sắt trên bề mặt. Có núi lửa Olympus Mons cao 21,9 km và hẻm núi Valles Marineris dài 4.000 km, đều lớn nhất hệ.', stats:[['Đường kính','6.779 km'],['Cách Mặt Trời','1,52 AU'],['Chu kỳ quỹ đạo','687 ngày'],['Vệ tinh','2']]},
+      phobos:{name:'Phobos', desc:'Vệ tinh nhỏ hình củ khoai, quay quanh Sao Hỏa chỉ trong 7,7 giờ và đang xoắn ốc dần vào trong — vài chục triệu năm nữa sẽ vỡ tan hoặc đâm xuống.', stats:[['Kích thước','~22 km'],['Chu kỳ','7,7 giờ']]},
+      deimos:{name:'Deimos', desc:'Vệ tinh ngoài cùng và nhỏ hơn của Sao Hỏa, bề mặt phủ lớp bụi regolith dày khiến nó trông nhẵn hơn Phobos.', stats:[['Kích thước','~12 km'],['Chu kỳ','30 giờ']]},
+      jupiter:{name:'Sao Mộc', desc:'Hành tinh khí khổng lồ lớn nhất hệ, nặng hơn tất cả các hành tinh còn lại cộng lại. Vết Đỏ Lớn là cơn bão khổng lồ đã hoành hành ít nhất 350 năm.', stats:[['Đường kính','139.820 km'],['Cách Mặt Trời','5,2 AU'],['Chu kỳ quỹ đạo','11,9 năm'],['Vệ tinh','95']]},
+      io:{name:'Io', desc:'Thiên thể núi lửa hoạt động mạnh nhất hệ mặt trời với hơn 400 núi lửa, do lực thủy triều của Sao Mộc liên tục bóp nặn lòng nó.', stats:[['Đường kính','3.643 km'],['Chu kỳ','1,8 ngày']]},
+      europa:{name:'Europa', desc:'Dưới lớp vỏ băng là đại dương nước lỏng có thể chứa gấp đôi lượng nước của Trái Đất — một trong những nơi hứa hẹn nhất để tìm sự sống.', stats:[['Đường kính','3.122 km'],['Chu kỳ','3,6 ngày']]},
+      ganymede:{name:'Ganymede', desc:'Vệ tinh lớn nhất hệ mặt trời, to hơn cả Sao Thủy, và là vệ tinh duy nhất có từ trường riêng.', stats:[['Đường kính','5.268 km'],['Chu kỳ','7,2 ngày']]},
+      callisto:{name:'Callisto', desc:'Bề mặt cổ xưa nhiều hố va chạm nhất trong hệ, gần như không thay đổi suốt 4 tỷ năm.', stats:[['Đường kính','4.821 km'],['Chu kỳ','16,7 ngày']]},
+      saturn:{name:'Sao Thổ', desc:'Nổi tiếng với hệ vành đai lộng lẫy làm từ băng và đá, trải rộng 282.000 km nhưng chỉ dày khoảng 10 mét. Mật độ thấp đến mức có thể nổi trên nước.', stats:[['Đường kính','116.460 km'],['Cách Mặt Trời','9,5 AU'],['Chu kỳ quỹ đạo','29,5 năm'],['Vệ tinh','146']]},
+      enceladus:{name:'Enceladus', desc:'Phun những cột băng và hơi nước từ đại dương ngầm qua các khe nứt ở cực nam — vật chất này tạo nên vành E của Sao Thổ.', stats:[['Đường kính','504 km'],['Chu kỳ','1,4 ngày']]},
+      titan:{name:'Titan', desc:'Vệ tinh duy nhất có khí quyển dày, với sông hồ methane lỏng trên bề mặt — thế giới duy nhất ngoài Trái Đất có chất lỏng ổn định trên bề mặt.', stats:[['Đường kính','5.150 km'],['Chu kỳ','15,9 ngày']]},
+      uranus:{name:'Sao Thiên Vương', desc:'Hành tinh băng khổng lồ nghiêng 98° — gần như "lăn" trên quỹ đạo, khiến mỗi cực có 42 năm sáng rồi 42 năm tối. Màu xanh lam nhạt do khí methane.', stats:[['Đường kính','50.724 km'],['Cách Mặt Trời','19,2 AU'],['Chu kỳ quỹ đạo','84 năm'],['Vệ tinh','28']]},
+      miranda:{name:'Miranda', desc:'Bề mặt chắp vá kỳ lạ với vách núi Verona Rupes cao ~20 km — vách đứng cao nhất hệ mặt trời.', stats:[['Đường kính','471 km'],['Chu kỳ','1,4 ngày']]},
+      neptune:{name:'Sao Hải Vương', desc:'Hành tinh xa nhất, được phát hiện năm 1846 bằng tính toán toán học trước khi quan sát. Gió ở đây đạt 2.100 km/h — nhanh nhất hệ mặt trời.', stats:[['Đường kính','49.244 km'],['Cách Mặt Trời','30 AU'],['Chu kỳ quỹ đạo','165 năm'],['Vệ tinh','16']]},
+      triton:{name:'Triton', desc:'Quay ngược chiều quỹ đạo của Sao Hải Vương — dấu hiệu nó là thiên thể vành đai Kuiper bị bắt giữ. Có mạch phun nitơ lỏng dù lạnh -235°C.', stats:[['Đường kính','2.707 km'],['Chu kỳ','5,9 ngày']]}
+    }
+  },
+  en: {
+    locale:'en-US',
+    ui:{ title:'SOLAR SYSTEM', simDate:'SIMULATION DATE', time:'TIME CONTROL', display:'DISPLAY',
+      bodies:'BODIES', orbit:'Orbit lines', labels:'Labels', belt:'Asteroid belt',
+      hintDesktop:'Drag = orbit · Scroll = zoom · Click = fly to',
+      hintMobile:'1 finger = orbit · Pinch = zoom · Tap = fly to',
+      speed:n=>n+' days/s', tourStart:'🚀 Guided tour', narrate:'Narration', loading:'Loading the universe…',
+      nwTitle:'Your browser does not support 3D',
+      nwBody:'WebGL is not enabled on this device or browser. Try a recent Chrome/Edge/Firefox, or enable hardware acceleration in settings.' },
+    bodies:{
+      sun:{name:'Sun', desc:'The star at the center of our system, holding 99.86% of its total mass. Surface temperature is about 5,500°C, while the core reaches 15 million °C as nuclear fusion turns hydrogen into helium.', stats:[['Diameter','1,392,700 km'],['Star type','G2V yellow dwarf'],['Age','~4.6 billion years'],['Surface temp','5,500°C']]},
+      mercury:{name:'Mercury', desc:'The smallest planet and closest to the Sun. With almost no atmosphere, temperatures swing wildly: 427°C by day, plunging to -173°C at night.', stats:[['Diameter','4,879 km'],['Distance from Sun','0.39 AU'],['Orbital period','88 days'],['Moons','0']]},
+      venus:{name:'Venus', desc:'The hottest planet (462°C) due to a runaway greenhouse effect from its dense CO₂ atmosphere. It spins backwards, so a Venusian day is longer than its year.', stats:[['Diameter','12,104 km'],['Distance from Sun','0.72 AU'],['Orbital period','225 days'],['Moons','0']]},
+      earth:{name:'Earth', desc:'The only known world with life, with 71% of its surface covered by liquid-water oceans. An oxygen-rich atmosphere and strong magnetic field shield it from cosmic radiation.', stats:[['Diameter','12,742 km'],['Distance from Sun','1 AU (150 million km)'],['Orbital period','365.3 days'],['Moons','1']]},
+      moon:{name:'Moon', desc:"Earth's only natural satellite, formed about 4.5 billion years ago. It always shows the same face to Earth due to tidal locking.", stats:[['Diameter','3,475 km'],['Distance from Earth','384,400 km'],['Orbital period','27.3 days']]},
+      mars:{name:'Mars', desc:'The "Red Planet" — its color comes from iron oxide on the surface. Home to Olympus Mons, a 21.9 km volcano, and Valles Marineris, a 4,000 km canyon, both the largest in the solar system.', stats:[['Diameter','6,779 km'],['Distance from Sun','1.52 AU'],['Orbital period','687 days'],['Moons','2']]},
+      phobos:{name:'Phobos', desc:'A potato-shaped little moon that circles Mars in just 7.7 hours, slowly spiraling inward — in a few tens of millions of years it will break apart or crash down.', stats:[['Size','~22 km'],['Orbital period','7.7 hours']]},
+      deimos:{name:'Deimos', desc:"The outer and smaller of Mars's moons, blanketed in a thick layer of regolith dust that makes it look smoother than Phobos.", stats:[['Size','~12 km'],['Orbital period','30 hours']]},
+      jupiter:{name:'Jupiter', desc:'The largest gas giant, more massive than all other planets combined. The Great Red Spot is a colossal storm that has raged for at least 350 years.', stats:[['Diameter','139,820 km'],['Distance from Sun','5.2 AU'],['Orbital period','11.9 years'],['Moons','95']]},
+      io:{name:'Io', desc:"The most volcanically active body in the solar system with over 400 volcanoes, kneaded relentlessly by Jupiter's tidal forces.", stats:[['Diameter','3,643 km'],['Orbital period','1.8 days']]},
+      europa:{name:'Europa', desc:'Beneath its icy shell lies a liquid-water ocean that may hold twice the water of Earth — one of the most promising places to search for life.', stats:[['Diameter','3,122 km'],['Orbital period','3.6 days']]},
+      ganymede:{name:'Ganymede', desc:'The largest moon in the solar system, bigger than Mercury, and the only moon with its own magnetic field.', stats:[['Diameter','5,268 km'],['Orbital period','7.2 days']]},
+      callisto:{name:'Callisto', desc:'The most heavily cratered surface in the solar system — an ancient landscape nearly unchanged for 4 billion years.', stats:[['Diameter','4,821 km'],['Orbital period','16.7 days']]},
+      saturn:{name:'Saturn', desc:'Famous for its magnificent ring system of ice and rock, spanning 282,000 km yet only about 10 meters thick. Its density is so low it would float on water.', stats:[['Diameter','116,460 km'],['Distance from Sun','9.5 AU'],['Orbital period','29.5 years'],['Moons','146']]},
+      enceladus:{name:'Enceladus', desc:"Sprays plumes of ice and water vapor from a subsurface ocean through fissures at its south pole — this material forms Saturn's E ring.", stats:[['Diameter','504 km'],['Orbital period','1.4 days']]},
+      titan:{name:'Titan', desc:'The only moon with a thick atmosphere, with rivers and lakes of liquid methane — the only world besides Earth with stable surface liquid.', stats:[['Diameter','5,150 km'],['Orbital period','15.9 days']]},
+      uranus:{name:'Uranus', desc:'An ice giant tilted 98° — it practically rolls along its orbit, giving each pole 42 years of light followed by 42 years of darkness. Its pale blue color comes from methane.', stats:[['Diameter','50,724 km'],['Distance from Sun','19.2 AU'],['Orbital period','84 years'],['Moons','28']]},
+      miranda:{name:'Miranda', desc:'A strangely patchwork surface featuring Verona Rupes, a cliff ~20 km tall — the highest known cliff in the solar system.', stats:[['Diameter','471 km'],['Orbital period','1.4 days']]},
+      neptune:{name:'Neptune', desc:'The most distant planet, discovered in 1846 through mathematical prediction before it was ever observed. Its winds reach 2,100 km/h — the fastest in the solar system.', stats:[['Diameter','49,244 km'],['Distance from Sun','30 AU'],['Orbital period','165 years'],['Moons','16']]},
+      triton:{name:'Triton', desc:"Orbits backwards relative to Neptune's rotation — a sign it is a captured Kuiper Belt object. It has geysers of liquid nitrogen despite being -235°C.", stats:[['Diameter','2,707 km'],['Orbital period','5.9 days']]}
+    }
+  }
+};
+
+// ---- Fun facts cho trẻ em (ngôn ngữ đơn giản, vui) ----
+const FUN = {
+  vi: {
+    sun:'Mặt Trời lớn đến mức chứa được hơn 1 triệu Trái Đất bên trong! ☀️',
+    mercury:'Ban ngày ở Sao Thủy nóng hơn lò nướng, ban đêm lại lạnh cóng! 🔥❄️',
+    venus:'Sao Kim là hành tinh nóng nhất hệ, dù không gần Mặt Trời nhất! 🌋',
+    earth:'Hành tinh duy nhất ta biết có sự sống — ngôi nhà của chúng mình! 🌍',
+    moon:'Trên Mặt Trăng bạn nhảy cao gấp 6 lần so với Trái Đất! 🦘',
+    mars:'Sao Hỏa có ngọn núi cao gần gấp 3 lần đỉnh Everest! 🏔️',
+    phobos:'Phobos trông y như một củ khoai tây bay trong vũ trụ! 🥔',
+    deimos:'Deimos nhỏ xíu — nhảy thật mạnh là bạn bay luôn khỏi nó! 🪨',
+    jupiter:'Sao Mộc to đến mức nhét vừa hơn 1.300 Trái Đất! 🪐',
+    io:'Io có hơn 400 núi lửa phun trào — nhiều nhất hệ mặt trời! 🌋',
+    europa:'Dưới lớp băng của Europa có thể là một đại dương khổng lồ! 🧊',
+    ganymede:'Ganymede là vệ tinh lớn nhất, còn to hơn cả Sao Thủy! 🌑',
+    callisto:'Callisto đầy hố va chạm như mặt bị rỗ! 🕳️',
+    saturn:'Sao Thổ nhẹ tới mức nếu có bồn tắm đủ to, nó sẽ nổi lềnh bềnh! 🛁',
+    enceladus:'Enceladus phun nước đá lên trời như một đài phun nước khổng lồ! ⛲',
+    titan:'Titan có mưa, nhưng là mưa khí metan chứ không phải nước! 🌧️',
+    uranus:'Sao Thiên Vương nằm nghiêng và lăn quanh Mặt Trời như quả bóng! 🎳',
+    miranda:'Miranda có vách đá cao nhất hệ — rơi xuống phải mất mười mấy phút! 🧗',
+    neptune:'Gió trên Sao Hải Vương thổi nhanh hơn cả máy bay phản lực! 💨',
+    triton:'Triton quay ngược chiều và phun những mạch nước nitơ đóng băng! ❄️'
+  },
+  en: {
+    sun:'The Sun is so big that over 1 million Earths could fit inside it! ☀️',
+    mercury:'Daytime on Mercury is hotter than an oven, but night is freezing cold! 🔥❄️',
+    venus:'Venus is the hottest planet — even though it is not the closest to the Sun! 🌋',
+    earth:'The only planet we know with life — our home! 🌍',
+    moon:'On the Moon you can jump 6 times higher than on Earth! 🦘',
+    mars:'Mars has a mountain almost 3 times taller than Mount Everest! 🏔️',
+    phobos:'Phobos looks just like a potato flying through space! 🥔',
+    deimos:'Deimos is so tiny that a strong jump could fling you off it! 🪨',
+    jupiter:'Jupiter is so huge that over 1,300 Earths could fit inside! 🪐',
+    io:'Io has over 400 erupting volcanoes — the most in the solar system! 🌋',
+    europa:"Under Europa's ice may lie a giant hidden ocean! 🧊",
+    ganymede:'Ganymede is the biggest moon — even bigger than Mercury! 🌑',
+    callisto:'Callisto is covered in craters like a face full of dimples! 🕳️',
+    saturn:'Saturn is so light it would float in a bathtub big enough! 🛁',
+    enceladus:'Enceladus shoots icy water into space like a giant fountain! ⛲',
+    titan:'Titan has rain — but it rains liquid methane, not water! 🌧️',
+    uranus:'Uranus is tipped on its side and rolls around the Sun like a ball! 🎳',
+    miranda:'Miranda has the tallest cliff in the solar system — a fall would take many minutes! 🧗',
+    neptune:'Winds on Neptune blow faster than a jet plane! 💨',
+    triton:'Triton orbits backwards and erupts frozen nitrogen geysers! ❄️'
+  }
+};
+</script>
+
+<!-- Three.js: local first, CDN fallback -->
+<script src="assets/vendor/three.min.js"></script>
+<script>
+(function(){
+  if (window.THREE){ boot(); return; }
+  var s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+  s.onload = boot;
+  s.onerror = showNoWebGL;
+  document.head.appendChild(s);
+})();
+
+function showNoWebGL(){
+  document.getElementById('loader').classList.add('hide');
+  const el = document.getElementById('nowebgl');
+  el.style.display = 'flex';
+}
+
+function boot(){
+  // ---- language ----
+  let lang = localStorage.getItem('ssLang') || 'vi';
+  if (!I18N[lang]) lang = 'vi';
+  const T = () => I18N[lang];
+
+  // ---- WebGL guard ----
+  const canvas = document.getElementById('space');
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+  } catch(e){ showNoWebGL(); return; }
+
+  const wrap = document.getElementById('wrap');
+  const labelLayer = document.getElementById('labels');
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 4000);
+
+  // ---- texture loading: local first, CDN fallback, tracked by a manager ----
+  const TEX_LOCAL = 'assets/textures/';
+  const TEX_CDN = 'https://cdn.jsdelivr.net/gh/KyleGough/solar-system@master/static/textures/';
+  const manager = new THREE.LoadingManager();
+  const loader = new THREE.TextureLoader(manager);
+  loader.crossOrigin = 'anonymous';
+  // Load a texture, falling back to CDN on error. Returns nothing; applies via cb.
+  function loadTex(file, cb){
+    loader.load(TEX_LOCAL + file, cb, undefined, () => {
+      loader.load(TEX_CDN + file, cb, undefined, () => {/* keep solid color */});
+    });
+  }
+
+  const bar = document.getElementById('bar');
+  const loaderEl = document.getElementById('loader');
+  manager.onProgress = (url, loaded, total) => { bar.style.width = (total ? (loaded/total*100) : 100) + '%'; };
+  let hidden = false;
+  function hideLoader(){ if (hidden) return; hidden = true; bar.style.width = '100%'; loaderEl.classList.add('hide'); }
+  manager.onLoad = () => setTimeout(hideLoader, 300);
+  // Safety: never trap kids on the loading screen
+  setTimeout(hideLoader, 9000);
+
+  const mqMobile = window.matchMedia('(max-width: 700px)');
+  let isMobile = mqMobile.matches;
+  const panel = document.getElementById('panel');
+  const ip = document.getElementById('infoPanel');
+  const menuBtn = document.getElementById('menuBtn');
+
+  function applyLayout(){
+    isMobile = mqMobile.matches;
+    document.getElementById('hint').textContent = isMobile ? T().ui.hintMobile : T().ui.hintDesktop;
+    if (!isMobile){ panel.classList.remove('open'); ip.style.display = ''; }
+  }
+  menuBtn.addEventListener('click', () => {
+    const opening = !panel.classList.contains('open');
+    panel.classList.toggle('open');
+    if (opening) ip.style.display = 'none';
+  });
+
+  // ---- music ----
+  const bgm = document.getElementById('bgm');
+  const musicBtn = document.getElementById('musicBtn');
+  let musicOn = false, userMuted = false;
+  function setMusic(on){
+    musicOn = on;
+    musicBtn.style.opacity = on ? '1' : '0.45';
+    musicBtn.style.textDecoration = on ? 'none' : 'line-through';
+    if (on) bgm.play().catch(()=>{ musicOn = false; musicBtn.style.opacity = '0.45'; });
+    else bgm.pause();
+  }
+  musicBtn.addEventListener('click', () => { userMuted = musicOn; setMusic(!musicOn); });
+  bgm.volume = 0.55;
+  bgm.play().then(()=>{ musicOn = true; musicBtn.style.opacity = '1'; }).catch(()=>{
+    musicBtn.style.opacity = '0.45';
+    const kick = () => { if (!userMuted && !musicOn) setMusic(true); window.removeEventListener('pointerdown', kick); };
+    window.addEventListener('pointerdown', kick);
+  });
+
+  function resize(){
+    const w = wrap.clientWidth, h = wrap.clientHeight;
+    renderer.setSize(w, h, false);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    camera.aspect = w/h; camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', () => { applyLayout(); resize(); });
+
+  // ---- lights & stars ----
+  scene.add(new THREE.AmbientLight(0x46506c, 0.9));
+  scene.add(new THREE.PointLight(0xfff2cc, 1.6, 0, 2));
+
+  const starGeo = new THREE.BufferGeometry();
+  const starPos = [];
+  for (let i=0;i<1200;i++){
+    const r = 900 + Math.random()*800, th = Math.random()*Math.PI*2, ph = Math.acos(2*Math.random()-1);
+    starPos.push(r*Math.sin(ph)*Math.cos(th), r*Math.cos(ph), r*Math.sin(ph)*Math.sin(th));
+  }
+  starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
+  scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({color:0xb9c4e0, size:1.4, sizeAttenuation:false})));
+
+  // ---- bodies ----
+  const bodies = [];
+  function makeBody(cfg, parent){
+    let geo;
+    if (cfg.lumpy){
+      geo = new THREE.SphereGeometry(cfg.r, 10, 8);
+      const p = geo.attributes.position;
+      for (let i=0;i<p.count;i++){
+        const s = 0.72 + Math.sin(i*12.9898)*0.5*0.28 + Math.random()*0.22;
+        p.setXYZ(i, p.getX(i)*s, p.getY(i)*s*0.85, p.getZ(i)*s);
+      }
+      geo.computeVertexNormals();
+    } else {
+      geo = new THREE.SphereGeometry(cfg.r, 36, 26);
+    }
+    const mat = cfg.emissive
+      ? new THREE.MeshBasicMaterial({color: cfg.color})
+      : new THREE.MeshLambertMaterial({color: cfg.color});
+    if (cfg.tex){
+      loadTex(cfg.tex, t => { mat.map = t; mat.color.set(cfg.tint || 0xffffff); mat.needsUpdate = true; });
+    }
+    const mesh = new THREE.Mesh(geo, mat);
+    const pivot = new THREE.Object3D();
+    (parent ? parent.mesh : scene).add(pivot);
+    pivot.add(mesh);
+    mesh.position.x = cfg.orbit || 0;
+    const b = {...cfg, mesh, pivot, parent, angle: Math.random()*Math.PI*2, indent: parent?1:0};
+    mesh.userData.body = b;
+    bodies.push(b);
+    if (cfg.orbit){
+      const pts = [];
+      for (let i=0;i<=128;i++){ const a = i/128*Math.PI*2; pts.push(new THREE.Vector3(Math.cos(a)*cfg.orbit, 0, Math.sin(a)*cfg.orbit)); }
+      const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
+        new THREE.LineBasicMaterial({color: parent?0x2e3a5c:0x39466e, transparent:true, opacity: parent?0.35:0.5}));
+      (parent ? parent.mesh : scene).add(line);
+      b.orbitLine = line;
+    }
+    return b;
+  }
+
+  const byId = {};
+  for (const cfg of DATA){
+    const b = makeBody({...cfg, fly: cfg.id==='sun' ? 32 : cfg.r*5+6});
+    byId[cfg.id] = b;
+    if (cfg.halo){
+      const halo = new THREE.Mesh(new THREE.SphereGeometry(cfg.r+1.5, 32, 24),
+        new THREE.MeshBasicMaterial({color:cfg.color, transparent:true, opacity:0.16}));
+      b.mesh.add(halo);
+    }
+    if (cfg.rings){
+      const rGeo = new THREE.RingGeometry(cfg.r*1.4, cfg.r*2.3, 96);
+      const pos = rGeo.attributes.position, uv = rGeo.attributes.uv;
+      const mid = cfg.r*1.85, v3 = new THREE.Vector3();
+      for (let i=0;i<pos.count;i++){ v3.fromBufferAttribute(pos, i); uv.setXY(i, v3.length() < mid ? 0 : 1, 1); }
+      const rMat = new THREE.MeshBasicMaterial({color:0xcdb98c, side:THREE.DoubleSide, transparent:true, opacity:0.85});
+      loadTex('saturn-ring.png', t => { rMat.map = t; rMat.color.set(0xffffff); rMat.needsUpdate = true; });
+      const ring = new THREE.Mesh(rGeo, rMat);
+      ring.rotation.x = Math.PI/2 - 0.45;
+      b.mesh.add(ring);
+    }
+    if (cfg.moons) for (const m of cfg.moons) makeBody({...m, fly: m.r*7+2.5}, b);
+  }
+
+  // ---- asteroid belt (InstancedMesh: 4 draw calls instead of 260) ----
+  const beltGroup = new THREE.Group();
+  const rockMat = new THREE.MeshLambertMaterial({color:0x8a7a64});
+  loadTex('moon.jpg', t => { rockMat.map = t; rockMat.color.set(0xa08868); rockMat.needsUpdate = true; });
+  const rockGeos = [];
+  for (let v=0; v<4; v++){
+    const g = new THREE.SphereGeometry(1, 8, 6);
+    const p = g.attributes.position;
+    for (let i=0;i<p.count;i++){
+      const s = 0.6 + Math.random()*0.55;
+      p.setXYZ(i, p.getX(i)*s, p.getY(i)*s*(0.6+Math.random()*0.5), p.getZ(i)*s);
+    }
+    g.computeVertexNormals();
+    rockGeos.push(g);
+  }
+  const rockCount = isMobile ? 150 : 260;
+  const counts = [0,0,0,0];
+  for (let i=0;i<rockCount;i++) counts[i%4]++;
+  const instanced = rockGeos.map((g, gi) => new THREE.InstancedMesh(g, rockMat, counts[gi]));
+  const fillIdx = [0,0,0,0];
+  const dummy = new THREE.Object3D();
+  for (let i=0;i<rockCount;i++){
+    const gi = i%4;
+    const a = Math.random()*Math.PI*2, r = 74 + Math.random()*16;
+    dummy.position.set(Math.cos(a)*r, (Math.random()-0.5)*2.6, Math.sin(a)*r);
+    dummy.scale.setScalar(0.14 + Math.random()*0.42);
+    dummy.rotation.set(Math.random()*6.3, Math.random()*6.3, Math.random()*6.3);
+    dummy.updateMatrix();
+    instanced[gi].setMatrixAt(fillIdx[gi]++, dummy.matrix);
+  }
+  instanced.forEach(m => { m.instanceMatrix.needsUpdate = true; beltGroup.add(m); });
+  scene.add(beltGroup);
+
+  // ---- sidebar list + labels (keyboard-accessible buttons) ----
+  const list = document.getElementById('bodyList');
+  for (const b of bodies){
+    const row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'body-row' + (b.indent ? ' moon' : '');
+    row.innerHTML = '<span class="dot" style="background:#'+b.color.toString(16).padStart(6,'0')+';"></span><span class="rowname"></span>';
+    row.addEventListener('click', () => selectBody(b));
+    b.row = row;
+    list.appendChild(row);
+    const lbl = document.createElement('div');
+    lbl.style.cssText = 'position:absolute;font-size:11px;color:rgba(225,232,248,0.8);transform:translate(-50%,-100%);white-space:nowrap;';
+    labelLayer.appendChild(lbl);
+    b.label = lbl;
+  }
+
+  let selected = null, camDist = 32, camTheta = 0.8, camPhi = 1.15, targetDist = 32;
+  let days = 0, playing = true, speed = 10, showLabels = true;
+  const startDate = new Date();
+
+  function selectBody(b){
+    if (selected) selected.row.classList.remove('sel');
+    selected = b;
+    b.row.classList.add('sel');
+    targetDist = b.fly;
+    const info = T().bodies[b.id];
+    document.getElementById('ipName').textContent = info.name;
+    document.getElementById('ipDesc').textContent = info.desc || '';
+    const funEl = document.getElementById('ipFun');
+    const funTxt = (FUN[lang] && FUN[lang][b.id]) || '';
+    funEl.textContent = funTxt; funEl.style.display = funTxt ? '' : 'none';
+    const img = document.getElementById('ipImg');
+    if (b.tex){ img.style.display = ''; img.onerror = () => { img.onerror=null; img.src = TEX_CDN + b.tex; }; img.src = TEX_LOCAL + b.tex; }
+    else img.style.display = 'none';
+    const st = document.getElementById('ipStats');
+    st.innerHTML = '';
+    for (const [k,v] of (info.stats||[])){
+      const r = document.createElement('div');
+      r.style.cssText = 'display:flex;justify-content:space-between;gap:8px;font-size:11px;padding:3px 0;';
+      r.innerHTML = '<span style="color:#7c87a3;"></span><span style="color:#dfe6f5;text-align:right;"></span>';
+      r.children[0].textContent = k; r.children[1].textContent = v;
+      st.appendChild(r);
+    }
+    ip.style.display = '';
+    if (isMobile) panel.classList.remove('open');
+  }
+  document.getElementById('ipClose').addEventListener('click', () => { ip.style.display = 'none'; });
+
+  // ---- apply all language-dependent text ----
+  function applyLang(){
+    document.documentElement.lang = lang;
+    const u = T().ui;
+    document.getElementById('uiTitle').textContent = u.title;
+    document.getElementById('uiSimDate').textContent = u.simDate;
+    document.getElementById('uiTime').textContent = u.time;
+    document.getElementById('uiDisplay').textContent = u.display;
+    document.getElementById('uiBodies').textContent = u.bodies;
+    document.getElementById('uiOrbit').textContent = u.orbit;
+    document.getElementById('uiLabels').textContent = u.labels;
+    document.getElementById('uiBelt').textContent = u.belt;
+    document.getElementById('uiNarrate').textContent = u.narrate;
+    document.getElementById('tourStartBtn').textContent = u.tourStart;
+    document.getElementById('spdOut').textContent = u.speed(speed);
+    document.getElementById('loadTxt').textContent = u.loading;
+    document.getElementById('nwTitle').textContent = u.nwTitle;
+    document.getElementById('nwBody').textContent = u.nwBody;
+    document.getElementById('langBtn').textContent = (lang === 'vi') ? 'EN' : 'VI';
+    document.title = (lang === 'vi') ? 'Hệ Mặt Trời 3D — Khám phá vũ trụ' : '3D Solar System — Explore the universe';
+    for (const b of bodies){ b.row.querySelector('.rowname').textContent = T().bodies[b.id].name; b.label.textContent = T().bodies[b.id].name; }
+    applyLayout();
+    if (selected) selectBody(selected);
+  }
+  document.getElementById('langBtn').addEventListener('click', () => {
+    lang = (lang === 'vi') ? 'en' : 'vi';
+    localStorage.setItem('ssLang', lang);
+    applyLang();
+  });
+
+  // ---- pointer / camera controls ----
+  const pointers = new Map();
+  let moved = 0, pinchDist = 0;
+  canvas.addEventListener('pointerdown', e => {
+    pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    if (pointers.size === 1) moved = 0;
+    if (pointers.size === 2){ const [a,b] = [...pointers.values()]; pinchDist = Math.hypot(a.x-b.x, a.y-b.y); }
+    canvas.style.cursor = 'grabbing';
+    canvas.setPointerCapture(e.pointerId);
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (!pointers.has(e.pointerId)) return;
+    const prev = pointers.get(e.pointerId);
+    const dx = e.clientX - prev.x, dy = e.clientY - prev.y;
+    pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    moved += Math.abs(dx) + Math.abs(dy);
+    if (pointers.size === 1){
+      camTheta -= dx * 0.006;
+      camPhi = Math.min(Math.PI - 0.15, Math.max(0.15, camPhi - dy * 0.006));
+    } else if (pointers.size === 2){
+      const [a,b] = [...pointers.values()];
+      const d = Math.hypot(a.x-b.x, a.y-b.y);
+      if (pinchDist > 0) targetDist = Math.min(600, Math.max((selected?selected.r:9)*2.5, targetDist * pinchDist / d));
+      pinchDist = d;
+    }
+  });
+  function endPointer(e){
+    const wasSingle = pointers.size === 1;
+    pointers.delete(e.pointerId);
+    pinchDist = 0;
+    if (pointers.size === 0) canvas.style.cursor = 'grab';
+    if (wasSingle && moved < 8){
+      const rect = canvas.getBoundingClientRect();
+      const m = new THREE.Vector2(((e.clientX-rect.left)/rect.width)*2-1, -((e.clientY-rect.top)/rect.height)*2+1);
+      const ray = new THREE.Raycaster();
+      ray.setFromCamera(m, camera);
+      const hits = ray.intersectObjects(bodies.map(b=>b.mesh));
+      if (hits.length) selectBody(hits[0].object.userData.body);
+    }
+  }
+  canvas.addEventListener('pointerup', endPointer);
+  canvas.addEventListener('pointercancel', endPointer);
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    targetDist = Math.min(600, Math.max((selected?selected.r:9)*2.5, targetDist * (e.deltaY > 0 ? 1.12 : 0.89)));
+  }, {passive:false});
+
+  // ---- UI controls ----
+  document.getElementById('spd').addEventListener('input', e => {
+    speed = Number(e.target.value);
+    document.getElementById('spdOut').textContent = T().ui.speed(speed);
+  });
+  document.getElementById('playBtn').addEventListener('click', () => {
+    playing = !playing;
+    const btn = document.getElementById('playBtn');
+    btn.textContent = playing ? '❚❚' : '▶';
+    btn.style.fontSize = playing ? '11px' : '13px';
+  });
+  document.getElementById('cbOrbit').addEventListener('change', e => { for (const b of bodies) if (b.orbitLine) b.orbitLine.visible = e.target.checked; });
+  document.getElementById('cbLabel').addEventListener('change', e => { showLabels = e.target.checked; });
+  document.getElementById('cbBelt').addEventListener('change', e => { beltGroup.visible = e.target.checked; });
+
+  // ---- Guided tour + narration ----
+  let narrate = false, touring = false, tourPaused = false, tourIdx = 0, tourTimer = null;
+  const tourOrder = ['sun','mercury','venus','earth','mars','jupiter','saturn','uranus','neptune'];
+  const tourBar = document.getElementById('tourBar');
+  const tourPlayBtn = document.getElementById('tourPlay');
+  const tourPosEl = document.getElementById('tourPos');
+
+  document.getElementById('cbNarrate').addEventListener('change', e => {
+    narrate = e.target.checked;
+    if (!narrate && window.speechSynthesis) speechSynthesis.cancel();
+  });
+
+  function speak(text){
+    if (!narrate || !('speechSynthesis' in window)) return false;
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = T().locale; u.rate = 0.95; u.pitch = 1.05;
+      u.onend = () => { if (touring && !tourPaused) scheduleNext(800); };
+      speechSynthesis.speak(u);
+      return true;
+    } catch(e){ return false; }
+  }
+
+  function clearTourTimer(){ if (tourTimer){ clearTimeout(tourTimer); tourTimer = null; } }
+  function scheduleNext(delay){ clearTourTimer(); tourTimer = setTimeout(() => tourGo(tourIdx + 1), delay); }
+  function updateTourBar(){ tourPosEl.textContent = (tourIdx + 1) + '/' + tourOrder.length; }
+
+  function tourGo(i){
+    if (i < 0) i = 0;
+    if (i >= tourOrder.length){ stopTour(); return; }
+    tourIdx = i;
+    updateTourBar();
+    selectBody(byId[tourOrder[i]]);
+    clearTourTimer();
+    if (tourPaused) return;
+    const info = T().bodies[tourOrder[i]];
+    const fun = (FUN[lang] && FUN[lang][tourOrder[i]]) || '';
+    const spoke = speak(info.name + '. ' + fun);
+    // Fallback timer so the tour always advances even if speech is off/unavailable
+    scheduleNext(spoke ? 13000 : 7500);
+  }
+  function startTour(){
+    touring = true; tourPaused = false;
+    tourBar.classList.add('on');
+    tourPlayBtn.textContent = '❚❚';
+    if (isMobile) panel.classList.remove('open');
+    tourGo(0);
+  }
+  function stopTour(){
+    touring = false; tourPaused = false;
+    tourBar.classList.remove('on');
+    clearTourTimer();
+    if (window.speechSynthesis) speechSynthesis.cancel();
+  }
+  function toggleTourPause(){
+    if (!touring) return;
+    tourPaused = !tourPaused;
+    tourPlayBtn.textContent = tourPaused ? '▶' : '❚❚';
+    if (tourPaused){ clearTourTimer(); if (window.speechSynthesis) speechSynthesis.cancel(); }
+    else tourGo(tourIdx);
+  }
+  document.getElementById('tourStartBtn').addEventListener('click', startTour);
+  document.getElementById('tourExit').addEventListener('click', stopTour);
+  document.getElementById('tourPlay').addEventListener('click', toggleTourPause);
+  document.getElementById('tourPrev').addEventListener('click', () => { if (touring) tourGo(tourIdx - 1); });
+  document.getElementById('tourNext').addEventListener('click', () => { if (touring) tourGo(tourIdx + 1); });
+
+  applyLang();
+  selectBody(byId.sun);
+  if (isMobile) ip.style.display = 'none';
+
+  // ---- render loop ----
+  const tmp = new THREE.Vector3();
+  let lastT = null;
+  function tick(t){
+    if (lastT === null) lastT = t;
+    const dt = Math.min((t-lastT)/1000, 0.1); lastT = t;
+    if (playing){
+      days += speed*dt;
+      for (const b of bodies) if (b.period){
+        b.angle += (2*Math.PI/b.period)*speed*dt;
+        b.mesh.position.set(Math.cos(b.angle)*b.orbit, 0, Math.sin(b.angle)*b.orbit);
+      }
+      beltGroup.rotation.y += (2*Math.PI/1800)*speed*dt;
+      const d = new Date(startDate.getTime() + days*86400000);
+      document.getElementById('simDate').textContent = d.toLocaleDateString(T().locale, {month:'short', day:'numeric', year:'numeric'});
+    }
+    for (const b of bodies) b.mesh.rotation.y += 0.3*dt;
+
+    if (touring && !tourPaused) camTheta -= 0.07*dt;
+    camDist += (targetDist - camDist) * Math.min(1, dt*4);
+    selected.mesh.getWorldPosition(tmp);
+    camera.position.set(
+      tmp.x + camDist*Math.sin(camPhi)*Math.cos(camTheta),
+      tmp.y + camDist*Math.cos(camPhi),
+      tmp.z + camDist*Math.sin(camPhi)*Math.sin(camTheta));
+    camera.lookAt(tmp);
+
+    const w = wrap.clientWidth, h = wrap.clientHeight;
+    for (const b of bodies){
+      if (!showLabels || b.indent && selected.parent !== b.parent && selected !== b.parent && selected !== b){
+        b.label.style.display = 'none'; continue;
+      }
+      b.mesh.getWorldPosition(tmp);
+      const v = tmp.clone().project(camera);
+      if (v.z > 1 || v.x < -1 || v.x > 1 || v.y < -1 || v.y > 1){ b.label.style.display = 'none'; continue; }
+      b.label.style.display = '';
+      b.label.style.left = ((v.x+1)/2*w) + 'px';
+      b.label.style.top = ((-v.y+1)/2*h - 10) + 'px';
+    }
+    renderer.render(scene, camera);
+    requestAnimationFrame(tick);
+  }
+  resize();
+  requestAnimationFrame(tick);
+}
+</script>
+</body>
+</html>
