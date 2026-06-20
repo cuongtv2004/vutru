@@ -41,6 +41,11 @@ Dựa trên ý tưởng từ [locphamnguyen/solar-system-3d](https://github.com/
 - **Screen reader**: vùng `aria-live` đọc tên thiên thể, câu hỏi & kết quả quiz; canvas có `role`/`aria-label`.
 - `aria-pressed` cho các nút bật/tắt (nhạc, so sánh, chạy/dừng, tạm dừng tour); `aria-current` cho thiên thể đang chọn; viền focus rõ ràng.
 
+## Phase 8 — Khoảng cách thật
+- Chế độ **🛰️ Khoảng cách thật**: Mặt Trời + 8 hành tinh xếp theo **đúng tỉ lệ khoảng cách (AU)** trên một trục.
+- Nhãn hiện khoảng cách từng hành tinh (vd "Sao Mộc · 5,2 AU"); caption nhấn mạnh Sao Hải Vương xa 30 AU.
+- Cho thấy các hành tinh trong dồn sát Mặt Trời còn nhóm ngoài cách rất xa. Loại trừ lẫn nhau với so-sánh/tour/quiz.
+
 ## Hạ tầng
 - **Test harness** `tests/runtime.py` (Playwright + Chromium headless) + CI GitHub Actions:
   bắt lỗi JS và kiểm thử tour/quiz/so-sánh/i18n trên mỗi PR.

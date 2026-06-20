@@ -86,8 +86,12 @@
   #compareBtn { width:100%; margin:6px 0 2px; padding:8px; font-size:12px; font-weight:bold; color:#1a1430; background:linear-gradient(90deg,#b79bf0,#d4c2ff); border:none; border-radius:8px; cursor:pointer; font-family:inherit; }
   #compareBtn:hover { filter:brightness(1.08); }
   #compareBtn.active { box-shadow:0 0 0 2px #b79bf0, 0 0 12px rgba(183,155,240,0.6); }
-  #compareCap { position:absolute; left:50%; bottom:calc(16px + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:40; display:none; max-width:min(92vw,560px); padding:10px 16px; font-size:12.5px; line-height:1.5; color:#ece5ff; background:rgba(8,12,24,0.92); border:1px solid rgba(183,155,240,0.45); border-radius:12px; text-align:center; }
-  #compareCap.on { display:block; }
+  #compareCap, #distanceCap { position:absolute; left:50%; bottom:calc(16px + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:40; display:none; max-width:min(92vw,560px); padding:10px 16px; font-size:12.5px; line-height:1.5; color:#ece5ff; background:rgba(8,12,24,0.92); border:1px solid rgba(183,155,240,0.45); border-radius:12px; text-align:center; }
+  #compareCap.on, #distanceCap.on { display:block; }
+  #distanceCap { color:#d6ecff; border-color:rgba(120,180,240,0.5); }
+  #distanceBtn { width:100%; margin:6px 0 2px; padding:8px; font-size:12px; font-weight:bold; color:#08182a; background:linear-gradient(90deg,#6fb3f0,#a6d4ff); border:none; border-radius:8px; cursor:pointer; font-family:inherit; }
+  #distanceBtn:hover { filter:brightness(1.08); }
+  #distanceBtn.active { box-shadow:0 0 0 2px #6fb3f0, 0 0 12px rgba(111,179,240,0.6); }
   /* Accessibility */
   .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
   button:focus-visible, [tabindex]:focus-visible, input:focus-visible { outline:3px solid #ffd877; outline-offset:2px; }
@@ -112,6 +116,7 @@
     <button id="tourStartBtn" type="button">🚀 Khám phá có hướng dẫn</button>
     <button id="quizStartBtn" type="button">🎯 Đố vui</button>
     <button id="compareBtn" type="button" aria-pressed="false">📏 So sánh kích thước</button>
+    <button id="distanceBtn" type="button" aria-pressed="false">🛰️ Khoảng cách thật</button>
     <div class="lbl-sec" id="uiSimDate" style="margin-top:8px;">NGÀY MÔ PHỎNG</div>
     <div id="simDate" style="font-size:13px;color:#dfe6f5;margin-bottom:10px;">—</div>
     <div class="lbl-sec" id="uiTime">ĐIỀU KHIỂN THỜI GIAN</div>
@@ -185,6 +190,7 @@
   </div>
 
   <div id="compareCap"></div>
+  <div id="distanceCap"></div>
 
   <div id="loader">
     <div class="planet-spin"></div>
@@ -243,6 +249,9 @@ const I18N = {
       compareStart:'📏 So sánh kích thước',
       compareCap:'Kích thước thật của các hành tinh so với nhau · ☀️ Mặt Trời còn to hơn Sao Mộc khoảng 10 lần nữa!',
       shareCopied:'Đã chép liên kết! 🔗',
+      distanceStart:'🛰️ Khoảng cách thật',
+      distanceCap:'Khoảng cách thật từ Mặt Trời (theo AU) · Sao Hải Vương xa tới 30 AU! · 🪐 Kích thước KHÔNG theo tỉ lệ.',
+      distAU:au=>au.toString().replace('.', ',')+' AU',
       loading:'Đang tải vũ trụ…',
       nwTitle:'Trình duyệt không hỗ trợ 3D',
       nwBody:'Thiết bị hoặc trình duyệt của bạn chưa bật WebGL. Hãy thử mở bằng Chrome/Edge/Firefox mới, hoặc bật tăng tốc phần cứng trong cài đặt.' },
@@ -284,6 +293,9 @@ const I18N = {
       compareStart:'📏 Size comparison',
       compareCap:'True sizes of the planets next to each other · ☀️ The Sun is about 10× bigger than Jupiter!',
       shareCopied:'Link copied! 🔗',
+      distanceStart:'🛰️ Real distances',
+      distanceCap:'True distances from the Sun (in AU) · Neptune is 30 AU away! · 🪐 Sizes are NOT to scale.',
+      distAU:au=>au+' AU',
       loading:'Loading the universe…',
       nwTitle:'Your browser does not support 3D',
       nwBody:'WebGL is not enabled on this device or browser. Try a recent Chrome/Edge/Firefox, or enable hardware acceleration in settings.' },
@@ -637,6 +649,33 @@ function boot(){
   });
   scene.add(compareGroup);
 
+  // ---- real-distance view: Sun + 8 planets spaced by TRUE distance (AU) ----
+  const AU = {mercury:0.39, venus:0.72, earth:1, mars:1.52, jupiter:5.2, saturn:9.5, uranus:19.2, neptune:30};
+  const DIST_F = 4;                       // 4 units / AU  -> Neptune ở x=120
+  const distEndX = AU.neptune * DIST_F;
+  const distCenterX = distEndX / 2;
+  const distanceGroup = new THREE.Group();
+  distanceGroup.visible = false;
+  const distanceItems = [];
+  // trục tỉ lệ từ Mặt Trời ra Sao Hải Vương
+  distanceGroup.add(new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(distEndX,0,0)]),
+    new THREE.LineBasicMaterial({color:0x39466e, transparent:true, opacity:0.6})));
+  // Mặt Trời ở gốc
+  const distSun = new THREE.Mesh(new THREE.SphereGeometry(2.6, 32, 24), byId.sun.mesh.material);
+  distanceGroup.add(distSun);
+  distanceItems.push({id:'sun', mesh:distSun, au:0, label:null});
+  for (const id of compareOrder){
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(1.1, 28, 20), byId[id].mesh.material);
+    mesh.position.set(AU[id]*DIST_F, 0, 0);
+    distanceGroup.add(mesh);
+    const lbl = document.createElement('div');
+    lbl.style.cssText = 'position:absolute;font-size:11px;color:rgba(225,232,248,0.9);transform:translate(-50%,-100%);white-space:nowrap;';
+    labelLayer.appendChild(lbl);
+    distanceItems.push({id, mesh, au:AU[id], label:lbl});
+  }
+  scene.add(distanceGroup);
+
   // ---- sidebar list + labels (keyboard-accessible buttons) ----
   const list = document.getElementById('bodyList');
   for (const b of bodies){
@@ -718,6 +757,9 @@ function boot(){
     document.getElementById('compareBtn').textContent = u.compareStart;
     document.getElementById('compareCap').textContent = u.compareCap;
     for (const c of compareItems) c.label.textContent = T().bodies[c.id].name;
+    document.getElementById('distanceBtn').textContent = u.distanceStart;
+    document.getElementById('distanceCap').textContent = u.distanceCap;
+    for (const c of distanceItems) if (c.label) c.label.textContent = T().bodies[c.id].name + ' · ' + u.distAU(c.au);
     document.getElementById('spdOut').textContent = u.speed(speed);
     document.getElementById('loadTxt').textContent = u.loading;
     document.getElementById('nwTitle').textContent = u.nwTitle;
@@ -858,7 +900,7 @@ function boot(){
     scheduleNext(spoke ? 13000 : 7500);
   }
   function startTour(){
-    closeQuiz(); setCompare(false);
+    closeQuiz(); setCompare(false); setDistance(false);
     touring = true; tourPaused = false;
     tourBar.classList.add('on');
     tourPlayBtn.textContent = '❚❚';
@@ -935,7 +977,7 @@ function boot(){
     document.querySelectorAll('#countChips .chip').forEach(c => c.classList.toggle('active', +c.dataset.count === quizCount));
   }
   function openQuizSetup(){
-    stopTour(); setCompare(false); closeQuiz();
+    stopTour(); setCompare(false); setDistance(false); closeQuiz();
     document.getElementById('quizBestLine').textContent = bestLineText();
     syncSetupUI();
     document.getElementById('quizSetup').classList.add('on');
@@ -1005,7 +1047,7 @@ function boot(){
     if (on === compareMode) return;
     compareMode = on;
     if (on){
-      stopTour(); closeQuiz();
+      stopTour(); closeQuiz(); setDistance(false);
       savedCam = {theta:camTheta, phi:camPhi, dist:targetDist};
       for (const b of bodies){ b.mesh.visible = false; if (b.orbitLine) b.orbitLine.visible = false; }
       beltGroup.visible = false;
@@ -1033,6 +1075,41 @@ function boot(){
   }
   compareBtn.addEventListener('click', () => setCompare(!compareMode));
 
+  // ---- real-distance mode toggle ----
+  let distanceMode = false, savedCamD = null;
+  const distanceBtn = document.getElementById('distanceBtn');
+  const distanceCap = document.getElementById('distanceCap');
+  function setDistance(on){
+    if (on === distanceMode) return;
+    distanceMode = on;
+    if (on){
+      stopTour(); closeQuiz(); setCompare(false);
+      savedCamD = {theta:camTheta, phi:camPhi, dist:targetDist};
+      for (const b of bodies){ b.mesh.visible = false; if (b.orbitLine) b.orbitLine.visible = false; }
+      beltGroup.visible = false;
+      distanceGroup.visible = true;
+      camTheta = Math.PI/2; camPhi = Math.PI/2 - 0.18; targetDist = distEndX * 0.62 + 10;
+      distanceBtn.classList.add('active');
+      distanceBtn.setAttribute('aria-pressed', 'true');
+      distanceCap.classList.add('on');
+      ip.style.display = 'none';
+      announce(T().ui.distanceCap);
+      if (isMobile) panel.classList.remove('open');
+    } else {
+      if (!compareMode) for (const b of bodies) b.mesh.visible = true;
+      const ob = document.getElementById('cbOrbit').checked;
+      if (!compareMode){ for (const b of bodies) if (b.orbitLine) b.orbitLine.visible = ob; beltGroup.visible = document.getElementById('cbBelt').checked; }
+      distanceGroup.visible = false;
+      if (savedCamD){ camTheta = savedCamD.theta; camPhi = savedCamD.phi; targetDist = savedCamD.dist; }
+      distanceBtn.classList.remove('active');
+      distanceBtn.setAttribute('aria-pressed', 'false');
+      distanceCap.classList.remove('on');
+      ip.style.display = isMobile ? 'none' : '';
+    }
+    if (typeof updateURL === 'function') updateURL();
+  }
+  distanceBtn.addEventListener('click', () => setDistance(!distanceMode));
+
   // ---- keyboard controls (accessibility) ----
   window.addEventListener('keydown', e => {
     const tag = (e.target && e.target.tagName || '').toLowerCase();
@@ -1043,6 +1120,7 @@ function boot(){
           document.getElementById('quizResult').classList.contains('on') || quizActive) closeQuiz();
       else if (touring) stopTour();
       else if (compareMode) setCompare(false);
+      else if (distanceMode) setDistance(false);
       return;
     }
     let handled = true;
@@ -1061,6 +1139,7 @@ function boot(){
   selectBody(byId[urlParams.get('body')] || byId.sun);
   if (isMobile) ip.style.display = 'none';
   if (urlParams.get('view') === 'compare') setCompare(true);
+  else if (urlParams.get('view') === 'distance') setDistance(true);
 
   // ---- render loop ----
   const tmp = new THREE.Vector3();
@@ -1081,11 +1160,14 @@ function boot(){
     if (!reduceMotion){
       for (const b of bodies) b.mesh.rotation.y += 0.3*dt;
       if (compareMode) for (const c of compareItems) c.mesh.rotation.y += 0.2*dt;
+      if (distanceMode) for (const c of distanceItems) c.mesh.rotation.y += 0.2*dt;
     }
 
     if (touring && !tourPaused && !reduceMotion) camTheta -= 0.07*dt;
     camDist += (targetDist - camDist) * Math.min(1, dt*4);
-    if (compareMode) tmp.set(0,0,0); else selected.mesh.getWorldPosition(tmp);
+    if (compareMode) tmp.set(0,0,0);
+    else if (distanceMode) tmp.set(distCenterX, 0, 0);
+    else selected.mesh.getWorldPosition(tmp);
     camera.position.set(
       tmp.x + camDist*Math.sin(camPhi)*Math.cos(camTheta),
       tmp.y + camDist*Math.cos(camPhi),
@@ -1093,29 +1175,30 @@ function boot(){
     camera.lookAt(tmp);
 
     const w = wrap.clientWidth, h = wrap.clientHeight;
+    const projLabel = (mesh, label) => {
+      mesh.getWorldPosition(tmp);
+      const v = tmp.clone().project(camera);
+      if (v.z > 1 || v.x < -1 || v.x > 1 || v.y < -1 || v.y > 1){ label.style.display = 'none'; return; }
+      label.style.display = '';
+      label.style.left = ((v.x+1)/2*w) + 'px';
+      label.style.top = ((-v.y+1)/2*h - 10) + 'px';
+    };
     if (compareMode){
       for (const b of bodies) b.label.style.display = 'none';
-      for (const c of compareItems){
-        if (!showLabels){ c.label.style.display = 'none'; continue; }
-        c.mesh.getWorldPosition(tmp);
-        const v = tmp.clone().project(camera);
-        if (v.z > 1 || v.x < -1 || v.x > 1 || v.y < -1 || v.y > 1){ c.label.style.display = 'none'; continue; }
-        c.label.style.display = '';
-        c.label.style.left = ((v.x+1)/2*w) + 'px';
-        c.label.style.top = ((-v.y+1)/2*h - 10) + 'px';
-      }
+      for (const c of distanceItems) if (c.label) c.label.style.display = 'none';
+      for (const c of compareItems){ if (showLabels) projLabel(c.mesh, c.label); else c.label.style.display = 'none'; }
+    } else if (distanceMode){
+      for (const b of bodies) b.label.style.display = 'none';
+      for (const c of compareItems) c.label.style.display = 'none';
+      for (const c of distanceItems){ if (!c.label) continue; if (showLabels) projLabel(c.mesh, c.label); else c.label.style.display = 'none'; }
     } else {
       for (const c of compareItems) c.label.style.display = 'none';
+      for (const c of distanceItems) if (c.label) c.label.style.display = 'none';
       for (const b of bodies){
         if (!showLabels || b.indent && selected.parent !== b.parent && selected !== b.parent && selected !== b){
           b.label.style.display = 'none'; continue;
         }
-        b.mesh.getWorldPosition(tmp);
-        const v = tmp.clone().project(camera);
-        if (v.z > 1 || v.x < -1 || v.x > 1 || v.y < -1 || v.y > 1){ b.label.style.display = 'none'; continue; }
-        b.label.style.display = '';
-        b.label.style.left = ((v.x+1)/2*w) + 'px';
-        b.label.style.top = ((-v.y+1)/2*h - 10) + 'px';
+        projLabel(b.mesh, b.label);
       }
     }
     renderer.render(scene, camera);

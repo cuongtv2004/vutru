@@ -71,6 +71,16 @@ def main():
         check("compare exits cleanly", "on" not in (page.get_attribute("#compareCap", "class") or ""))
         check("compare aria-pressed false", page.get_attribute("#compareBtn", "aria-pressed") == "false")
 
+        # Real-distance mode
+        page.click("#distanceBtn"); page.wait_for_timeout(900)
+        check("distance caption on", "on" in (page.get_attribute("#distanceCap", "class") or ""))
+        check("distance aria-pressed true", page.get_attribute("#distanceBtn", "aria-pressed") == "true")
+        # switching to compare must turn distance off (mutually exclusive)
+        page.click("#compareBtn"); page.wait_for_timeout(600)
+        check("compare turns distance off", "on" not in (page.get_attribute("#distanceCap", "class") or "")
+              and "on" in (page.get_attribute("#compareCap", "class") or ""))
+        page.click("#compareBtn"); page.wait_for_timeout(400)
+
         # Tour
         page.click("#tourStartBtn"); page.wait_for_timeout(800)
         check("tour bar visible",
