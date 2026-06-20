@@ -30,6 +30,11 @@ Dựa trên ý tưởng từ [locphamnguyen/solar-system-3d](https://github.com/
 - Mở rộng pool lên **19 câu** (thêm câu về mặt trăng & kích thước), mỗi câu gắn `cat`.
 - **Lưu điểm cao** (localStorage): hiện kỷ lục ở màn setup và màn kết quả, báo "🎉 Kỷ lục mới!" khi phá kỷ lục.
 
+## Phase 5 — Deep-link & chia sẻ
+- URL phản ánh trạng thái: `?body=earth&lang=vi&view=compare` (dùng `history.replaceState`, không reload).
+- Mở link có sẵn tham số → tự chọn đúng thiên thể, ngôn ngữ, chế độ xem. Giáo viên gửi link tới đúng hành tinh.
+- Nút **🔗 chép liên kết** (clipboard) + thông báo cho screen reader.
+
 ## Phase 7 — Accessibility
 - **Điều khiển bằng bàn phím**: phím mũi tên xoay camera, `+`/`-` phóng to/thu nhỏ, `Esc` thoát tour/quiz/so-sánh.
 - Tôn trọng **`prefers-reduced-motion`**: tắt confetti và tự-xoay (camera/hành tinh/vành đai) cho bé dễ say chuyển động.

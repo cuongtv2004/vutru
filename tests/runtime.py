@@ -117,6 +117,17 @@ def main():
         after = page.text_content("#uiTitle")
         check("language toggles", before != after, f"{before} -> {after}")
 
+        # Deep-link: state reflected in URL + loadable from URL
+        check("URL has deep-link params", "body=" in page.url and "lang=" in page.url, page.url)
+        page2 = browser.new_page(viewport={"width": 1100, "height": 700})
+        page2.on("pageerror", lambda e: errors.append("page2: " + str(e)))
+        page2.goto(f"http://127.0.0.1:{port}/index.html?body=mars&lang=en", wait_until="load", timeout=30000)
+        page2.wait_for_timeout(2000)
+        check("deep-link selects body", (page2.text_content("#ipName") or "").strip() == "Mars",
+              page2.text_content("#ipName"))
+        check("deep-link sets language", (page2.text_content("#uiTitle") or "").strip() == "SOLAR SYSTEM")
+        page2.close()
+
         browser.close()
 
     httpd.shutdown()

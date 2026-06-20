@@ -15,6 +15,7 @@
   #labels { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
   .corner-btn { position:absolute; top:calc(10px + env(safe-area-inset-top)); width:40px; height:40px; padding:0; font-size:18px; line-height:1; color:#dfe6f5; background:rgba(8,12,24,0.85); border:1px solid rgba(255,255,255,0.3); border-radius:8px; cursor:pointer; z-index:30; }
   #menuBtn { left:10px; display:none; }
+  #shareBtn { right:106px; font-size:15px; }
   #langBtn { right:58px; font-size:13px; font-weight:bold; }
   #musicBtn { right:10px; font-size:16px; }
   #panel { position:absolute; top:0; left:0; bottom:0; width:172px; background:rgba(8,12,24,0.92); padding:12px; padding-top:calc(12px + env(safe-area-inset-top)); overflow-y:auto; box-sizing:border-box; z-index:20; transition:transform 0.25s; }
@@ -102,6 +103,7 @@
   <div id="srLive" class="sr-only" aria-live="polite"></div>
 
   <button id="menuBtn" class="corner-btn" aria-label="Mở danh sách thiên thể">☰</button>
+  <button id="shareBtn" class="corner-btn" aria-label="Chép liên kết chia sẻ">🔗</button>
   <button id="langBtn" class="corner-btn" aria-label="Đổi ngôn ngữ">EN</button>
   <button id="musicBtn" class="corner-btn" aria-label="Bật/tắt nhạc nền" aria-pressed="false">♪</button>
 
@@ -240,6 +242,7 @@ const I18N = {
       quizBest:(s,t,p)=>'🏆 Kỷ lục: '+s+'/'+t+' ('+p+'%)', quizNoBest:'🏆 Chưa có kỷ lục — chơi thử nào!', quizNewRecord:'🎉 Kỷ lục mới!',
       compareStart:'📏 So sánh kích thước',
       compareCap:'Kích thước thật của các hành tinh so với nhau · ☀️ Mặt Trời còn to hơn Sao Mộc khoảng 10 lần nữa!',
+      shareCopied:'Đã chép liên kết! 🔗',
       loading:'Đang tải vũ trụ…',
       nwTitle:'Trình duyệt không hỗ trợ 3D',
       nwBody:'Thiết bị hoặc trình duyệt của bạn chưa bật WebGL. Hãy thử mở bằng Chrome/Edge/Firefox mới, hoặc bật tăng tốc phần cứng trong cài đặt.' },
@@ -280,6 +283,7 @@ const I18N = {
       quizBest:(s,t,p)=>'🏆 Best: '+s+'/'+t+' ('+p+'%)', quizNoBest:'🏆 No record yet — give it a go!', quizNewRecord:'🎉 New record!',
       compareStart:'📏 Size comparison',
       compareCap:'True sizes of the planets next to each other · ☀️ The Sun is about 10× bigger than Jupiter!',
+      shareCopied:'Link copied! 🔗',
       loading:'Loading the universe…',
       nwTitle:'Your browser does not support 3D',
       nwBody:'WebGL is not enabled on this device or browser. Try a recent Chrome/Edge/Firefox, or enable hardware acceleration in settings.' },
@@ -403,8 +407,9 @@ function showNoWebGL(){
 }
 
 function boot(){
-  // ---- language ----
-  let lang = localStorage.getItem('ssLang') || 'vi';
+  // ---- deep-link params + language ----
+  const urlParams = new URLSearchParams(location.search);
+  let lang = urlParams.get('lang') || localStorage.getItem('ssLang') || 'vi';
   if (!I18N[lang]) lang = 'vi';
   const T = () => I18N[lang];
 
@@ -679,6 +684,7 @@ function boot(){
     }
     ip.style.display = '';
     if (isMobile) panel.classList.remove('open');
+    if (typeof updateURL === 'function') updateURL();
   }
   document.getElementById('ipClose').addEventListener('click', () => { ip.style.display = 'none'; });
 
@@ -726,6 +732,23 @@ function boot(){
     lang = (lang === 'vi') ? 'en' : 'vi';
     localStorage.setItem('ssLang', lang);
     applyLang();
+    updateURL();
+  });
+
+  // ---- deep-link: phản ánh trạng thái vào URL + chép liên kết chia sẻ ----
+  function updateURL(){
+    const params = new URLSearchParams();
+    if (selected) params.set('body', selected.id);
+    params.set('lang', lang);
+    if (typeof compareMode !== 'undefined' && compareMode) params.set('view', 'compare');
+    else if (typeof distanceMode !== 'undefined' && distanceMode) params.set('view', 'distance');
+    history.replaceState(null, '', location.pathname + '?' + params.toString());
+  }
+  document.getElementById('shareBtn').addEventListener('click', () => {
+    updateURL();
+    const done = () => announce(T().ui.shareCopied);
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(location.href).then(done, done);
+    else done();
   });
 
   // ---- pointer / camera controls ----
@@ -1006,6 +1029,7 @@ function boot(){
       compareCap.classList.remove('on');
       ip.style.display = isMobile ? 'none' : '';
     }
+    if (typeof updateURL === 'function') updateURL();
   }
   compareBtn.addEventListener('click', () => setCompare(!compareMode));
 
@@ -1034,8 +1058,9 @@ function boot(){
   });
 
   applyLang();
-  selectBody(byId.sun);
+  selectBody(byId[urlParams.get('body')] || byId.sun);
   if (isMobile) ip.style.display = 'none';
+  if (urlParams.get('view') === 'compare') setCompare(true);
 
   // ---- render loop ----
   const tmp = new THREE.Vector3();
