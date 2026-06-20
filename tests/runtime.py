@@ -78,15 +78,28 @@ def main():
         check("tour advances", page.text_content("#tourPos") != p0, f"{p0} -> {page.text_content('#tourPos')}")
         page.click("#tourExit"); page.wait_for_timeout(300)
 
-        # Quiz
-        page.click("#quizStartBtn"); page.wait_for_timeout(600)
+        # Quiz: setup screen -> begin -> play through -> result + high score
+        page.click("#quizStartBtn"); page.wait_for_timeout(400)
+        check("quiz setup overlay shown", "on" in (page.get_attribute("#quizSetup", "class") or ""))
+        page.click('#topicChips .chip[data-topic="size"]'); page.wait_for_timeout(150)
+        check("topic chip activates",
+              "active" in (page.get_attribute('#topicChips .chip[data-topic="size"]', "class") or ""))
+        page.click("#quizBegin"); page.wait_for_timeout(500)
         check("quiz bar visible",
               page.eval_on_selector("#quizBar", "e=>getComputedStyle(e).display") != "none")
         check("quiz has question", len((page.text_content("#quizQ") or "").strip()) > 0)
-        page.eval_on_selector_all("#bodyList .body-row", "els=>els[1] && els[1].click()")
+        page.eval_on_selector_all("#bodyList .body-row", "els=>els[2] && els[2].click()")
         page.wait_for_timeout(700)
         check("quiz gives feedback", len((page.text_content("#quizFb") or "").strip()) > 0)
-        page.click("#quizExit"); page.wait_for_timeout(300)
+        # play to completion (answer each question by clicking a body)
+        for _ in range(12):
+            if "on" in (page.get_attribute("#quizResult", "class") or ""):
+                break
+            page.eval_on_selector_all("#bodyList .body-row", "els=>els[2] && els[2].click()")
+            page.wait_for_timeout(2200)
+        check("quiz reaches result", "on" in (page.get_attribute("#quizResult", "class") or ""))
+        check("high score line shown", len((page.text_content("#quizRecord") or "").strip()) > 0)
+        page.click("#quizClose"); page.wait_for_timeout(300)
 
         # i18n toggle
         before = page.text_content("#uiTitle")

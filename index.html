@@ -65,14 +65,20 @@
   #quizMetaRow { display:flex; gap:12px; align-items:center; justify-content:center; font-size:12px; }
   #quizMeta { color:#9aa6c2; } #quizFb { font-weight:bold; }
   #quizExit { position:absolute; top:8px; right:8px; width:26px; height:26px; padding:0; font-size:13px; line-height:1; color:#9aa6c2; background:transparent; border:none; cursor:pointer; }
-  #quizResult { position:absolute; inset:0; z-index:55; display:none; align-items:center; justify-content:center; background:rgba(4,6,12,0.72); }
-  #quizResult.on { display:flex; }
+  #quizResult, #quizSetup { position:absolute; inset:0; z-index:55; display:none; align-items:center; justify-content:center; background:rgba(4,6,12,0.72); }
+  #quizResult.on, #quizSetup.on { display:flex; }
   .quiz-card { background:#0c1326; border:1px solid rgba(255,255,255,0.2); border-radius:16px; padding:26px 28px; text-align:center; max-width:300px; }
+  .quiz-card-title { color:#eef2fb; font-size:16px; font-weight:bold; margin-bottom:14px; }
   #quizStars { font-size:30px; }
-  #quizResultTxt { color:#eef2fb; font-size:16px; font-weight:bold; margin:10px 0 16px; line-height:1.5; }
-  .quiz-card button { margin:4px; padding:9px 16px; font-size:13px; font-weight:bold; border:none; border-radius:8px; cursor:pointer; font-family:inherit; }
-  #quizReplay { color:#0a1e14; background:linear-gradient(90deg,#5fe0a0,#8ff0c4); }
-  #quizClose { color:#cfd7ea; background:rgba(255,255,255,0.1); }
+  #quizResultTxt { color:#eef2fb; font-size:16px; font-weight:bold; margin:10px 0 6px; line-height:1.5; }
+  .quiz-best { color:#cdb98c; font-size:12.5px; margin:4px 0 14px; min-height:16px; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-bottom:10px; }
+  .chip { padding:6px 12px; font-size:12px; color:#c8d1e6; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.2); border-radius:16px; cursor:pointer; font-family:inherit; }
+  .chip:hover { background:rgba(255,255,255,0.14); }
+  .chip.active { color:#0a1e14; background:linear-gradient(90deg,#5fe0a0,#8ff0c4); border-color:transparent; font-weight:bold; }
+  .quiz-card > button { margin:4px; padding:9px 16px; font-size:13px; font-weight:bold; border:none; border-radius:8px; cursor:pointer; font-family:inherit; }
+  #quizReplay, #quizBegin { color:#0a1e14; background:linear-gradient(90deg,#5fe0a0,#8ff0c4); }
+  #quizClose, #quizSetupClose { color:#cfd7ea; background:rgba(255,255,255,0.1); }
   .confetti { position:fixed; top:-30px; z-index:70; pointer-events:none; animation:fall linear forwards; }
   @keyframes fall { to { transform:translateY(108vh) rotate(540deg); opacity:0.15; } }
   /* Size comparison */
@@ -135,10 +141,30 @@
     <div id="quizMetaRow"><span id="quizMeta"></span><span id="quizFb"></span></div>
   </div>
 
+  <div id="quizSetup">
+    <div class="quiz-card">
+      <div id="quizSetupTitle" class="quiz-card-title">Chọn chủ đề &amp; số câu</div>
+      <div id="topicChips" class="chips">
+        <button class="chip" type="button" data-topic="all">Tất cả</button>
+        <button class="chip" type="button" data-topic="planet">Hành tinh</button>
+        <button class="chip" type="button" data-topic="moon">Mặt trăng</button>
+        <button class="chip" type="button" data-topic="size">Kích thước</button>
+      </div>
+      <div id="countChips" class="chips">
+        <button class="chip" type="button" data-count="6">6</button>
+        <button class="chip" type="button" data-count="10">10</button>
+      </div>
+      <div id="quizBestLine" class="quiz-best"></div>
+      <button id="quizBegin" type="button">Bắt đầu</button>
+      <button id="quizSetupClose" type="button">Đóng</button>
+    </div>
+  </div>
+
   <div id="quizResult">
     <div class="quiz-card">
       <div id="quizStars">⭐</div>
       <div id="quizResultTxt"></div>
+      <div id="quizRecord" class="quiz-best"></div>
       <button id="quizReplay" type="button">Chơi lại</button>
       <button id="quizClose" type="button">Đóng</button>
     </div>
@@ -205,6 +231,9 @@ const I18N = {
       speed:n=>n+' ngày/giây', tourStart:'🚀 Khám phá có hướng dẫn', narrate:'Đọc lời kể',
       quizStart:'🎯 Đố vui', quizCorrect:'Chính xác! 🎉', quizWrong:'Chưa đúng rồi 😅', quizReplay:'Chơi lại', quizClose:'Đóng',
       quizMeta:(i,n,s)=>'Câu '+i+'/'+n+' · Điểm: '+s, quizResult:(s,n)=>'Bé trả lời đúng '+s+'/'+n+' câu!',
+      quizSetupTitle:'Chọn chủ đề & số câu', quizBegin:'Bắt đầu',
+      topicAll:'Tất cả', topicPlanet:'Hành tinh', topicMoon:'Mặt trăng', topicSize:'Kích thước',
+      quizBest:(s,t,p)=>'🏆 Kỷ lục: '+s+'/'+t+' ('+p+'%)', quizNoBest:'🏆 Chưa có kỷ lục — chơi thử nào!', quizNewRecord:'🎉 Kỷ lục mới!',
       compareStart:'📏 So sánh kích thước',
       compareCap:'Kích thước thật của các hành tinh so với nhau · ☀️ Mặt Trời còn to hơn Sao Mộc khoảng 10 lần nữa!',
       loading:'Đang tải vũ trụ…',
@@ -242,6 +271,9 @@ const I18N = {
       speed:n=>n+' days/s', tourStart:'🚀 Guided tour', narrate:'Narration',
       quizStart:'🎯 Quiz', quizCorrect:'Correct! 🎉', quizWrong:'Not quite 😅', quizReplay:'Play again', quizClose:'Close',
       quizMeta:(i,n,s)=>'Q '+i+'/'+n+' · Score: '+s, quizResult:(s,n)=>'You got '+s+'/'+n+' right!',
+      quizSetupTitle:'Choose topic & length', quizBegin:'Start',
+      topicAll:'All', topicPlanet:'Planets', topicMoon:'Moons', topicSize:'Sizes',
+      quizBest:(s,t,p)=>'🏆 Best: '+s+'/'+t+' ('+p+'%)', quizNoBest:'🏆 No record yet — give it a go!', quizNewRecord:'🎉 New record!',
       compareStart:'📏 Size comparison',
       compareCap:'True sizes of the planets next to each other · ☀️ The Sun is about 10× bigger than Jupiter!',
       loading:'Loading the universe…',
@@ -321,19 +353,30 @@ const FUN = {
 };
 
 // ---- Quiz "học mà chơi": đáp án là id thiên thể dễ bấm (Mặt Trời, 8 hành tinh, Mặt Trăng) ----
+// cat: 'planet' | 'moon' | 'size' — đáp án phải là id thiên thể bấm được (có trong byId)
 const QUIZ = [
-  {answer:'venus',   q:{vi:'Hành tinh nào NÓNG nhất?', en:'Which planet is the HOTTEST?'}},
-  {answer:'mercury', q:{vi:'Hành tinh nào GẦN Mặt Trời nhất?', en:'Which planet is CLOSEST to the Sun?'}},
-  {answer:'earth',   q:{vi:'Hành tinh nào có SỰ SỐNG — nhà của chúng mình?', en:'Which planet has LIFE — our home?'}},
-  {answer:'mars',    q:{vi:'Hành tinh nào được gọi là "Hành tinh ĐỎ"?', en:'Which is the "RED Planet"?'}},
-  {answer:'jupiter', q:{vi:'Hành tinh nào LỚN nhất?', en:'Which planet is the BIGGEST?'}},
-  {answer:'saturn',  q:{vi:'Hành tinh nào có VÀNH ĐAI nổi tiếng?', en:'Which planet has the famous RINGS?'}},
-  {answer:'uranus',  q:{vi:'Hành tinh nào nằm NGHIÊNG, lăn quanh Mặt Trời?', en:'Which planet is TIPPED on its side?'}},
-  {answer:'neptune', q:{vi:'Hành tinh nào XA Mặt Trời nhất?', en:'Which planet is FARTHEST from the Sun?'}},
-  {answer:'neptune', q:{vi:'Hành tinh nào có GIÓ thổi nhanh nhất?', en:'Which planet has the FASTEST winds?'}},
-  {answer:'sun',     q:{vi:'Đâu là NGÔI SAO ở trung tâm hệ?', en:'Which is the STAR at the center?'}},
-  {answer:'moon',    q:{vi:'Đâu là VỆ TINH của Trái Đất?', en:"Which is Earth's MOON?"}},
-  {answer:'mercury', q:{vi:'Hành tinh nào NHỎ nhất?', en:'Which planet is the SMALLEST?'}}
+  // --- Hành tinh ---
+  {answer:'venus',   cat:'planet', q:{vi:'Hành tinh nào NÓNG nhất?', en:'Which planet is the HOTTEST?'}},
+  {answer:'mercury', cat:'planet', q:{vi:'Hành tinh nào GẦN Mặt Trời nhất?', en:'Which planet is CLOSEST to the Sun?'}},
+  {answer:'earth',   cat:'planet', q:{vi:'Hành tinh nào có SỰ SỐNG — nhà của chúng mình?', en:'Which planet has LIFE — our home?'}},
+  {answer:'mars',    cat:'planet', q:{vi:'Hành tinh nào được gọi là "Hành tinh ĐỎ"?', en:'Which is the "RED Planet"?'}},
+  {answer:'saturn',  cat:'planet', q:{vi:'Hành tinh nào có VÀNH ĐAI nổi tiếng?', en:'Which planet has the famous RINGS?'}},
+  {answer:'uranus',  cat:'planet', q:{vi:'Hành tinh nào nằm NGHIÊNG, lăn quanh Mặt Trời?', en:'Which planet is TIPPED on its side?'}},
+  {answer:'neptune', cat:'planet', q:{vi:'Hành tinh nào có GIÓ thổi nhanh nhất?', en:'Which planet has the FASTEST winds?'}},
+  {answer:'sun',     cat:'planet', q:{vi:'Đâu là NGÔI SAO ở trung tâm hệ?', en:'Which is the STAR at the center?'}},
+  // --- Kích thước & khoảng cách ---
+  {answer:'jupiter', cat:'size',   q:{vi:'Hành tinh nào LỚN nhất?', en:'Which planet is the BIGGEST?'}},
+  {answer:'mercury', cat:'size',   q:{vi:'Hành tinh nào NHỎ nhất?', en:'Which planet is the SMALLEST?'}},
+  {answer:'saturn',  cat:'size',   q:{vi:'Hành tinh nào LỚN thứ HAI?', en:'Which planet is the SECOND biggest?'}},
+  {answer:'neptune', cat:'size',   q:{vi:'Hành tinh nào XA Mặt Trời nhất?', en:'Which planet is FARTHEST from the Sun?'}},
+  {answer:'sun',     cat:'size',   q:{vi:'Thiên thể nào LỚN nhất hệ mặt trời?', en:'Which is the LARGEST body in the solar system?'}},
+  // --- Mặt trăng (vệ tinh) ---
+  {answer:'moon',     cat:'moon', q:{vi:'Đâu là VỆ TINH của Trái Đất?', en:"Which is Earth's MOON?"}},
+  {answer:'ganymede', cat:'moon', q:{vi:'Vệ tinh nào LỚN nhất hệ mặt trời?', en:'Which is the BIGGEST moon in the solar system?'}},
+  {answer:'io',       cat:'moon', q:{vi:'Vệ tinh nào có nhiều NÚI LỬA nhất?', en:'Which moon has the most VOLCANOES?'}},
+  {answer:'europa',   cat:'moon', q:{vi:'Vệ tinh nào có ĐẠI DƯƠNG ngầm dưới lớp băng?', en:'Which moon has a hidden OCEAN under ice?'}},
+  {answer:'titan',    cat:'moon', q:{vi:'Vệ tinh nào có KHÍ QUYỂN dày và hồ methane?', en:'Which moon has a thick ATMOSPHERE and methane lakes?'}},
+  {answer:'triton',   cat:'moon', q:{vi:'Vệ tinh nào của Sao Hải Vương quay NGƯỢC chiều?', en:"Which of Neptune's moons orbits BACKWARDS?"}}
 ];
 </script>
 
@@ -646,7 +689,15 @@ function boot(){
     document.getElementById('quizStartBtn').textContent = u.quizStart;
     document.getElementById('quizReplay').textContent = u.quizReplay;
     document.getElementById('quizClose').textContent = u.quizClose;
+    document.getElementById('quizSetupTitle').textContent = u.quizSetupTitle;
+    document.getElementById('quizBegin').textContent = u.quizBegin;
+    document.getElementById('quizSetupClose').textContent = u.quizClose;
+    document.querySelector('#topicChips .chip[data-topic="all"]').textContent = u.topicAll;
+    document.querySelector('#topicChips .chip[data-topic="planet"]').textContent = u.topicPlanet;
+    document.querySelector('#topicChips .chip[data-topic="moon"]').textContent = u.topicMoon;
+    document.querySelector('#topicChips .chip[data-topic="size"]').textContent = u.topicSize;
     if (quizActive) showQuestion();
+    if (document.getElementById('quizSetup').classList.contains('on')) document.getElementById('quizBestLine').textContent = bestLineText();
     if (document.getElementById('quizResult').classList.contains('on')) document.getElementById('quizResultTxt').textContent = u.quizResult(score, quizSet.length);
     document.getElementById('compareBtn').textContent = u.compareStart;
     document.getElementById('compareCap').textContent = u.compareCap;
@@ -834,11 +885,30 @@ function boot(){
     document.getElementById('quizFb').textContent = '';
     updateQuizMeta();
   }
-  function startQuiz(){
-    stopTour(); setCompare(false);
-    quizSet = shuffle(QUIZ.slice()).slice(0, 6);
-    quizIdx = 0; score = 0; quizActive = true; quizLock = false;
+  let quizTopic = 'all', quizCount = 6;
+  const QUIZ_BEST_KEY = 'ssQuizBest';
+  function loadBest(){ try { return JSON.parse(localStorage.getItem(QUIZ_BEST_KEY)); } catch(e){ return null; } }
+  function bestLineText(){
+    const b = loadBest();
+    return (b && b.total) ? T().ui.quizBest(b.score, b.total, Math.round(b.score/b.total*100)) : T().ui.quizNoBest;
+  }
+  function syncSetupUI(){
+    document.querySelectorAll('#topicChips .chip').forEach(c => c.classList.toggle('active', c.dataset.topic === quizTopic));
+    document.querySelectorAll('#countChips .chip').forEach(c => c.classList.toggle('active', +c.dataset.count === quizCount));
+  }
+  function openQuizSetup(){
+    stopTour(); setCompare(false); closeQuiz();
+    document.getElementById('quizBestLine').textContent = bestLineText();
+    syncSetupUI();
+    document.getElementById('quizSetup').classList.add('on');
+    if (isMobile) panel.classList.remove('open');
+  }
+  function beginQuiz(){
+    document.getElementById('quizSetup').classList.remove('on');
     document.getElementById('quizResult').classList.remove('on');
+    const pool = quizTopic === 'all' ? QUIZ.slice() : QUIZ.filter(q => q.cat === quizTopic);
+    quizSet = shuffle(pool).slice(0, Math.min(quizCount, pool.length));
+    quizIdx = 0; score = 0; quizActive = true; quizLock = false;
     quizBar.classList.add('on');
     if (isMobile) panel.classList.remove('open');
     showQuestion();
@@ -861,23 +931,32 @@ function boot(){
   function endQuiz(){
     quizActive = false;
     quizBar.classList.remove('on');
-    document.getElementById('quizResultTxt').textContent = T().ui.quizResult(score, quizSet.length);
-    const stars = Math.max(1, Math.round(score / quizSet.length * 3));
-    document.getElementById('quizStars').textContent = '⭐'.repeat(stars);
+    const total = quizSet.length, pct = total ? score/total : 0;
+    const prev = loadBest();
+    const isRecord = prev && prev.total && pct > prev.score/prev.total;
+    if (!prev || !prev.total || pct > prev.score/prev.total) localStorage.setItem(QUIZ_BEST_KEY, JSON.stringify({score, total}));
+    document.getElementById('quizResultTxt').textContent = T().ui.quizResult(score, total);
+    document.getElementById('quizRecord').textContent = isRecord ? T().ui.quizNewRecord : bestLineText();
+    document.getElementById('quizStars').textContent = '⭐'.repeat(Math.max(1, Math.round(pct * 3)));
     document.getElementById('quizResult').classList.add('on');
-    if (score === quizSet.length) confetti();
+    if (total && score === total) confetti();
   }
   function closeQuiz(){
     quizActive = false; quizLock = false;
     quizBar.classList.remove('on');
     document.getElementById('quizResult').classList.remove('on');
+    document.getElementById('quizSetup').classList.remove('on');
   }
   function pickBody(b){ selectBody(b); if (quizActive && !quizLock) quizAnswer(b.id); }
 
-  document.getElementById('quizStartBtn').addEventListener('click', startQuiz);
+  document.getElementById('quizStartBtn').addEventListener('click', openQuizSetup);
   document.getElementById('quizExit').addEventListener('click', closeQuiz);
-  document.getElementById('quizReplay').addEventListener('click', startQuiz);
+  document.getElementById('quizReplay').addEventListener('click', beginQuiz);
   document.getElementById('quizClose').addEventListener('click', closeQuiz);
+  document.getElementById('quizBegin').addEventListener('click', beginQuiz);
+  document.getElementById('quizSetupClose').addEventListener('click', closeQuiz);
+  document.querySelectorAll('#topicChips .chip').forEach(c => c.addEventListener('click', () => { quizTopic = c.dataset.topic; syncSetupUI(); }));
+  document.querySelectorAll('#countChips .chip').forEach(c => c.addEventListener('click', () => { quizCount = +c.dataset.count; syncSetupUI(); }));
 
   // ---- size-comparison mode toggle ----
   let compareMode = false, savedCam = null;

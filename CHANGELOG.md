@@ -25,6 +25,11 @@ Dựa trên ý tưởng từ [locphamnguyen/solar-system-3d](https://github.com/
 - Camera tự căn khung, lưu/khôi phục góc nhìn; caption song ngữ giải thích tỉ lệ.
 - (Khoảng cách giữ nguyên, không theo tỉ lệ — dải giá trị thật quá lớn để hiển thị cùng lúc.)
 
+## Phase 4 — Quiz nâng cao
+- Màn **chọn chủ đề & số câu** trước khi chơi: Tất cả / Hành tinh / Mặt trăng / Kích thước, chọn 6 hoặc 10 câu.
+- Mở rộng pool lên **19 câu** (thêm câu về mặt trăng & kích thước), mỗi câu gắn `cat`.
+- **Lưu điểm cao** (localStorage): hiện kỷ lục ở màn setup và màn kết quả, báo "🎉 Kỷ lục mới!" khi phá kỷ lục.
+
 ## Hạ tầng
 - **Test harness** `tests/runtime.py` (Playwright + Chromium headless) + CI GitHub Actions:
   bắt lỗi JS và kiểm thử tour/quiz/so-sánh/i18n trên mỗi PR.
