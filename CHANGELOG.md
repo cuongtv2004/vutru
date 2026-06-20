@@ -52,6 +52,11 @@ Dựa trên ý tưởng từ [locphamnguyen/solar-system-3d](https://github.com/
 - **Lớp sao sáng** thứ hai tạo chiều sâu cho nền vũ trụ.
 - **Vòng sáng** đánh dấu thiên thể đang chọn (luôn hướng về camera).
 
+## Phase 11 — Hành tinh lùn
+- Thêm **5 hành tinh lùn**: Ceres (trong vành đai), Sao Diêm Vương (+ mặt trăng Charon), Haumea (hình quả trứng), Makemake, Eris (quỹ đạo ngoài Sao Hải Vương).
+- Đầy đủ tên/mô tả/thông số + fun fact song ngữ + **file audio đọc lời kể** tiếng Việt & Anh.
+- Bấm chọn được như mọi thiên thể, hỗ trợ deep-link (`?body=pluto`).
+
 ## Phase 10 — Cân nặng trên các thiên thể
 - Nút **⚖️ Cân nặng của em**: bé nhập cân nặng → xem mình nặng bao nhiêu trên Mặt Trăng, các hành tinh và Mặt Trời (theo trọng lực bề mặt thật).
 - Danh sách xếp tăng dần theo trọng lực (nhẹ nhất → nặng nhất), cập nhật trực tiếp khi nhập, song ngữ.

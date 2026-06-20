@@ -61,6 +61,8 @@ def main():
         check("loading screen hidden", "hide" in (page.get_attribute("#loader", "class") or ""))
         check("default body = Sun", (page.text_content("#ipName") or "").strip() in ("Mặt Trời", "Sun"))
         check("fun fact shown", page.eval_on_selector("#ipFun", "e=>e.textContent.length>0"))
+        nrows = page.eval_on_selector_all("#bodyList .body-row", "els=>els.length")
+        check("dwarf planets added (>=26 bodies)", nrows >= 26, f"{nrows} rows")
 
         # Compare mode
         page.click("#compareBtn"); page.wait_for_timeout(900)
@@ -159,6 +161,10 @@ def main():
         check("deep-link selects body", (page2.text_content("#ipName") or "").strip() == "Mars",
               page2.text_content("#ipName"))
         check("deep-link sets language", (page2.text_content("#uiTitle") or "").strip() == "SOLAR SYSTEM")
+        page2.goto(f"http://127.0.0.1:{port}/index.html?body=pluto&lang=vi", wait_until="load", timeout=30000)
+        page2.wait_for_timeout(2000)
+        check("dwarf planet selectable (Pluto)", (page2.text_content("#ipName") or "").strip() == "Sao Diêm Vương",
+              page2.text_content("#ipName"))
         page2.close()
 
         browser.close()
