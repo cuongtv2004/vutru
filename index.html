@@ -184,7 +184,7 @@
   <div id="quizBar">
     <button id="quizExit" aria-label="Thoát đố vui">✕</button>
     <div id="quizQ"></div>
-    <div id="quizMetaRow"><span id="quizMeta"></span><span id="quizFb"></span></div>
+    <div id="quizMetaRow"><span id="quizTimer" style="display:none;font-weight:bold;"></span><span id="quizMeta"></span><span id="quizFb"></span></div>
   </div>
 
   <div id="quizSetup">
@@ -200,6 +200,10 @@
       <div id="countChips" class="chips">
         <button class="chip" type="button" data-count="6">6</button>
         <button class="chip" type="button" data-count="10">10</button>
+      </div>
+      <div id="modeChips" class="chips">
+        <button class="chip" type="button" data-timed="0">Thường</button>
+        <button class="chip" type="button" data-timed="1">⏱️ Tính giờ</button>
       </div>
       <div id="quizBestLine" class="quiz-best"></div>
       <button id="quizBegin" type="button">Bắt đầu</button>
@@ -321,6 +325,7 @@ const I18N = {
       quizStart:'🎯 Đố vui', quizCorrect:'Chính xác! 🎉', quizWrong:'Chưa đúng rồi 😅', quizReplay:'Chơi lại', quizClose:'Đóng',
       quizMeta:(i,n,s)=>'Câu '+i+'/'+n+' · Điểm: '+s, quizResult:(s,n)=>'Bé trả lời đúng '+s+'/'+n+' câu!',
       quizSetupTitle:'Chọn chủ đề & số câu', quizBegin:'Bắt đầu',
+      modeNormal:'Thường', modeTimed:'⏱️ Tính giờ', quizTimeUp:'⏰ Hết giờ rồi!',
       topicAll:'Tất cả', topicPlanet:'Hành tinh', topicMoon:'Mặt trăng', topicSize:'Kích thước', topicDwarf:'Hành tinh lùn',
       quizBest:(s,t,p)=>'🏆 Kỷ lục: '+s+'/'+t+' ('+p+'%)', quizNoBest:'🏆 Chưa có kỷ lục — chơi thử nào!', quizNewRecord:'🎉 Kỷ lục mới!',
       compareStart:'📏 So sánh kích thước',
@@ -380,6 +385,7 @@ const I18N = {
       quizStart:'🎯 Quiz', quizCorrect:'Correct! 🎉', quizWrong:'Not quite 😅', quizReplay:'Play again', quizClose:'Close',
       quizMeta:(i,n,s)=>'Q '+i+'/'+n+' · Score: '+s, quizResult:(s,n)=>'You got '+s+'/'+n+' right!',
       quizSetupTitle:'Choose topic & length', quizBegin:'Start',
+      modeNormal:'Normal', modeTimed:'⏱️ Timed', quizTimeUp:"⏰ Time's up!",
       topicAll:'All', topicPlanet:'Planets', topicMoon:'Moons', topicSize:'Sizes', topicDwarf:'Dwarf planets',
       quizBest:(s,t,p)=>'🏆 Best: '+s+'/'+t+' ('+p+'%)', quizNoBest:'🏆 No record yet — give it a go!', quizNewRecord:'🎉 New record!',
       compareStart:'📏 Size comparison',
@@ -979,6 +985,8 @@ function boot(){
     document.querySelector('#topicChips .chip[data-topic="moon"]').textContent = u.topicMoon;
     document.querySelector('#topicChips .chip[data-topic="size"]').textContent = u.topicSize;
     document.querySelector('#topicChips .chip[data-topic="dwarf"]').textContent = u.topicDwarf;
+    document.querySelector('#modeChips .chip[data-timed="0"]').textContent = u.modeNormal;
+    document.querySelector('#modeChips .chip[data-timed="1"]').textContent = u.modeTimed;
     if (quizActive) showQuestion();
     if (document.getElementById('quizSetup').classList.contains('on')) document.getElementById('quizBestLine').textContent = bestLineText();
     if (document.getElementById('quizResult').classList.contains('on')) document.getElementById('quizResultTxt').textContent = u.quizResult(score, quizSet.length);
@@ -1226,15 +1234,36 @@ function boot(){
 
   const quizBar = document.getElementById('quizBar');
   function updateQuizMeta(){ document.getElementById('quizMeta').textContent = T().ui.quizMeta(Math.min(quizIdx+1, quizSet.length), quizSet.length, score); }
+  // ---- bộ đếm giờ (chế độ tính giờ) ----
+  const QUIZ_TIME = 12;                       // giây mỗi câu
+  let quizTimer = null, quizTimeLeft = 0;
+  function clearQuizTimer(){ if (quizTimer){ clearInterval(quizTimer); quizTimer = null; } }
+  function renderQuizTimer(){
+    const el = document.getElementById('quizTimer');
+    el.textContent = '⏱️ ' + quizTimeLeft + 's';
+    el.style.color = quizTimeLeft <= 3 ? '#f6896a' : '#8fe0bd';
+  }
+  function startQuizTimer(){
+    clearQuizTimer();
+    const el = document.getElementById('quizTimer');
+    if (!quizTimed){ el.style.display = 'none'; return; }
+    quizTimeLeft = QUIZ_TIME; el.style.display = ''; renderQuizTimer();
+    quizTimer = setInterval(() => {
+      quizTimeLeft--; renderQuizTimer();
+      if (quizTimeLeft <= 0){ clearQuizTimer(); resolveAnswer(null); }
+    }, 1000);
+  }
   function showQuestion(){
     document.getElementById('quizQ').textContent = quizSet[quizIdx].q[lang];
     document.getElementById('quizFb').textContent = '';
     updateQuizMeta();
     announce(quizSet[quizIdx].q[lang]);
+    startQuizTimer();
   }
-  let quizTopic = 'all', quizCount = 6;
+  let quizTopic = 'all', quizCount = 6, quizTimed = false;
   const QUIZ_BEST_KEY = 'ssQuizBest';
-  function loadBest(){ try { return JSON.parse(localStorage.getItem(QUIZ_BEST_KEY)); } catch(e){ return null; } }
+  function bestKey(){ return quizTimed ? QUIZ_BEST_KEY + 'Timed' : QUIZ_BEST_KEY; }
+  function loadBest(){ try { return JSON.parse(localStorage.getItem(bestKey())); } catch(e){ return null; } }
   function bestLineText(){
     const b = loadBest();
     return (b && b.total) ? T().ui.quizBest(b.score, b.total, Math.round(b.score/b.total*100)) : T().ui.quizNoBest;
@@ -1242,6 +1271,7 @@ function boot(){
   function syncSetupUI(){
     document.querySelectorAll('#topicChips .chip').forEach(c => c.classList.toggle('active', c.dataset.topic === quizTopic));
     document.querySelectorAll('#countChips .chip').forEach(c => c.classList.toggle('active', +c.dataset.count === quizCount));
+    document.querySelectorAll('#modeChips .chip').forEach(c => c.classList.toggle('active', (c.dataset.timed === '1') === quizTimed));
   }
   function openQuizSetup(){
     stopTour(); setCompare(false); setDistance(false); closeQuiz(); closePhase(); closeConst();
@@ -1260,12 +1290,13 @@ function boot(){
     if (isMobile) panel.classList.remove('open');
     showQuestion();
   }
-  function quizAnswer(id){
+  function resolveAnswer(id){
     if (!quizActive || quizLock) return;
-    quizLock = true;
-    const correct = id === quizSet[quizIdx].answer;
+    quizLock = true; clearQuizTimer();
+    const timedOut = id === null;
+    const correct = !timedOut && id === quizSet[quizIdx].answer;
     const fb = document.getElementById('quizFb');
-    fb.textContent = correct ? T().ui.quizCorrect : T().ui.quizWrong;
+    fb.textContent = correct ? T().ui.quizCorrect : (timedOut ? T().ui.quizTimeUp : T().ui.quizWrong);
     fb.style.color = correct ? '#7ee08a' : '#f6896a';
     announce(fb.textContent);
     if (correct){ score++; confetti(); blip(true); }
@@ -1276,13 +1307,15 @@ function boot(){
       if (quizIdx >= quizSet.length) endQuiz(); else showQuestion();
     }, correct ? 1400 : 2000);
   }
+  function quizAnswer(id){ resolveAnswer(id); }
   function endQuiz(){
-    quizActive = false;
+    quizActive = false; clearQuizTimer();
+    document.getElementById('quizTimer').style.display = 'none';
     quizBar.classList.remove('on');
     const total = quizSet.length, pct = total ? score/total : 0;
     const prev = loadBest();
     const isRecord = prev && prev.total && pct > prev.score/prev.total;
-    if (!prev || !prev.total || pct > prev.score/prev.total) localStorage.setItem(QUIZ_BEST_KEY, JSON.stringify({score, total}));
+    if (!prev || !prev.total || pct > prev.score/prev.total) localStorage.setItem(bestKey(), JSON.stringify({score, total}));
     document.getElementById('quizResultTxt').textContent = T().ui.quizResult(score, total);
     document.getElementById('quizRecord').textContent = isRecord ? T().ui.quizNewRecord : bestLineText();
     document.getElementById('quizStars').textContent = '⭐'.repeat(Math.max(1, Math.round(pct * 3)));
@@ -1290,7 +1323,8 @@ function boot(){
     if (total && score === total) confetti();
   }
   function closeQuiz(){
-    quizActive = false; quizLock = false;
+    quizActive = false; quizLock = false; clearQuizTimer();
+    document.getElementById('quizTimer').style.display = 'none';
     quizBar.classList.remove('on');
     document.getElementById('quizResult').classList.remove('on');
     document.getElementById('quizSetup').classList.remove('on');
@@ -1305,6 +1339,7 @@ function boot(){
   document.getElementById('quizSetupClose').addEventListener('click', closeQuiz);
   document.querySelectorAll('#topicChips .chip').forEach(c => c.addEventListener('click', () => { quizTopic = c.dataset.topic; syncSetupUI(); }));
   document.querySelectorAll('#countChips .chip').forEach(c => c.addEventListener('click', () => { quizCount = +c.dataset.count; syncSetupUI(); }));
+  document.querySelectorAll('#modeChips .chip').forEach(c => c.addEventListener('click', () => { quizTimed = c.dataset.timed === '1'; syncSetupUI(); document.getElementById('quizBestLine').textContent = bestLineText(); }));
 
   // ---- size-comparison mode toggle ----
   let compareMode = false, savedCam = null;

@@ -119,6 +119,21 @@ def main():
         check("high score line shown", len((page.text_content("#quizRecord") or "").strip()) > 0)
         page.click("#quizClose"); page.wait_for_timeout(300)
 
+        # Timed quiz mode
+        page.click("#quizStartBtn"); page.wait_for_timeout(300)
+        page.click('#modeChips .chip[data-timed="1"]'); page.wait_for_timeout(150)
+        check("timed mode chip activates",
+              "active" in (page.get_attribute('#modeChips .chip[data-timed="1"]', "class") or ""))
+        page.click('#topicChips .chip[data-topic="all"]'); page.wait_for_timeout(100)
+        page.click("#quizBegin"); page.wait_for_timeout(500)
+        check("countdown timer visible in timed mode",
+              page.eval_on_selector("#quizTimer", "e=>getComputedStyle(e).display") != "none")
+        check("countdown shows seconds", "s" in (page.text_content("#quizTimer") or ""),
+              page.text_content("#quizTimer"))
+        page.click("#quizExit"); page.wait_for_timeout(200)
+        check("timer hidden after exiting quiz",
+              page.eval_on_selector("#quizTimer", "e=>getComputedStyle(e).display") == "none")
+
         # Accessibility
         check("canvas is focusable application", page.get_attribute("#space", "role") == "application"
               and page.get_attribute("#space", "tabindex") == "0")
