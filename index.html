@@ -66,8 +66,16 @@
   #quizMetaRow { display:flex; gap:12px; align-items:center; justify-content:center; font-size:12px; }
   #quizMeta { color:#9aa6c2; } #quizFb { font-weight:bold; }
   #quizExit { position:absolute; top:8px; right:8px; width:26px; height:26px; padding:0; font-size:13px; line-height:1; color:#9aa6c2; background:transparent; border:none; cursor:pointer; }
-  #quizResult, #quizSetup { position:absolute; inset:0; z-index:55; display:none; align-items:center; justify-content:center; background:rgba(4,6,12,0.72); }
-  #quizResult.on, #quizSetup.on { display:flex; }
+  #quizResult, #quizSetup, #weightPanel { position:absolute; inset:0; z-index:55; display:none; align-items:center; justify-content:center; background:rgba(4,6,12,0.72); }
+  #quizResult.on, #quizSetup.on, #weightPanel.on { display:flex; }
+  #weightList { display:flex; flex-direction:column; gap:3px; max-height:46vh; overflow-y:auto; }
+  .wrow { display:flex; align-items:center; gap:8px; font-size:13px; color:#dfe6f5; padding:3px 4px; }
+  .wrow .dot { width:9px; height:9px; border-radius:50%; flex:none; }
+  .wrow .wname { flex:1; text-align:left; color:#c8d1e6; }
+  .wrow .wkg { font-weight:bold; }
+  #weightClose { color:#cfd7ea; background:rgba(255,255,255,0.1); }
+  #weightBtn { width:100%; margin:6px 0 2px; padding:8px; font-size:12px; font-weight:bold; color:#2a1e08; background:linear-gradient(90deg,#f0c46f,#ffe0a6); border:none; border-radius:8px; cursor:pointer; font-family:inherit; }
+  #weightBtn:hover { filter:brightness(1.08); }
   .quiz-card { background:#0c1326; border:1px solid rgba(255,255,255,0.2); border-radius:16px; padding:26px 28px; text-align:center; max-width:300px; }
   .quiz-card-title { color:#eef2fb; font-size:16px; font-weight:bold; margin-bottom:14px; }
   #quizStars { font-size:30px; }
@@ -117,6 +125,7 @@
     <button id="quizStartBtn" type="button">🎯 Đố vui</button>
     <button id="compareBtn" type="button" aria-pressed="false">📏 So sánh kích thước</button>
     <button id="distanceBtn" type="button" aria-pressed="false">🛰️ Khoảng cách thật</button>
+    <button id="weightBtn" type="button">⚖️ Cân nặng của em</button>
     <div class="lbl-sec" id="uiSimDate" style="margin-top:8px;">NGÀY MÔ PHỎNG</div>
     <div id="simDate" style="font-size:13px;color:#dfe6f5;margin-bottom:10px;">—</div>
     <div class="lbl-sec" id="uiTime">ĐIỀU KHIỂN THỜI GIAN</div>
@@ -178,6 +187,17 @@
       <div id="quizRecord" class="quiz-best"></div>
       <button id="quizReplay" type="button">Chơi lại</button>
       <button id="quizClose" type="button">Đóng</button>
+    </div>
+  </div>
+
+  <div id="weightPanel">
+    <div class="quiz-card">
+      <div id="weightTitle" class="quiz-card-title">Em nặng bao nhiêu ngoài vũ trụ?</div>
+      <label id="weightAsk" for="weightInput" style="display:block;font-size:13px;color:#c8d1e6;margin-bottom:6px;">Cân nặng của em (kg):</label>
+      <input type="number" id="weightInput" min="1" max="300" step="1" value="30" inputmode="numeric"
+        style="width:90px;padding:7px;font-size:15px;text-align:center;border-radius:8px;border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.08);color:#eef2fb;font-family:inherit;" />
+      <div id="weightList" style="margin:14px 0 8px;"></div>
+      <button id="weightClose" type="button">Đóng</button>
     </div>
   </div>
 
@@ -243,6 +263,7 @@ const I18N = {
       speed:n=>n+' ngày/giây', tourStart:'🚀 Khám phá có hướng dẫn', narrate:'Đọc lời kể',
       narrateNoVoice:'Thiết bị chưa có giọng đọc tiếng Việt. Hãy cài giọng tiếng Việt trong Cài đặt hệ thống để nghe đúng nhé.',
       soundOnLabel:'Bật tiếng', soundOffLabel:'Tắt tiếng',
+      weightStart:'⚖️ Cân nặng của em', weightTitle:'Em nặng bao nhiêu ngoài vũ trụ?', weightAsk:'Cân nặng của em (kg):',
       quizStart:'🎯 Đố vui', quizCorrect:'Chính xác! 🎉', quizWrong:'Chưa đúng rồi 😅', quizReplay:'Chơi lại', quizClose:'Đóng',
       quizMeta:(i,n,s)=>'Câu '+i+'/'+n+' · Điểm: '+s, quizResult:(s,n)=>'Bé trả lời đúng '+s+'/'+n+' câu!',
       quizSetupTitle:'Chọn chủ đề & số câu', quizBegin:'Bắt đầu',
@@ -289,6 +310,7 @@ const I18N = {
       speed:n=>n+' days/s', tourStart:'🚀 Guided tour', narrate:'Narration',
       narrateNoVoice:'This device has no voice for the selected language. Install one in system settings to hear it.',
       soundOnLabel:'Sound on', soundOffLabel:'Sound off',
+      weightStart:'⚖️ Your weight', weightTitle:'How much do you weigh out there?', weightAsk:'Your weight (kg):',
       quizStart:'🎯 Quiz', quizCorrect:'Correct! 🎉', quizWrong:'Not quite 😅', quizReplay:'Play again', quizClose:'Close',
       quizMeta:(i,n,s)=>'Q '+i+'/'+n+' · Score: '+s, quizResult:(s,n)=>'You got '+s+'/'+n+' right!',
       quizSetupTitle:'Choose topic & length', quizBegin:'Start',
@@ -402,6 +424,9 @@ const QUIZ = [
   {answer:'titan',    cat:'moon', q:{vi:'Vệ tinh nào có KHÍ QUYỂN dày và hồ methane?', en:'Which moon has a thick ATMOSPHERE and methane lakes?'}},
   {answer:'triton',   cat:'moon', q:{vi:'Vệ tinh nào của Sao Hải Vương quay NGƯỢC chiều?', en:"Which of Neptune's moons orbits BACKWARDS?"}}
 ];
+
+// Trọng lực bề mặt so với Trái Đất (g = 1) — để tính cân nặng của bé trên mỗi thiên thể
+const GRAV = {sun:27.0, mercury:0.38, venus:0.91, earth:1.0, moon:0.17, mars:0.38, jupiter:2.53, saturn:1.07, uranus:0.89, neptune:1.14};
 </script>
 
 <!-- Three.js: local first, CDN fallback -->
@@ -786,6 +811,10 @@ function boot(){
     document.getElementById('distanceBtn').textContent = u.distanceStart;
     document.getElementById('distanceCap').textContent = u.distanceCap;
     for (const c of distanceItems) if (c.label) c.label.textContent = T().bodies[c.id].name + ' · ' + u.distAU(c.au);
+    document.getElementById('weightBtn').textContent = u.weightStart;
+    document.getElementById('weightTitle').textContent = u.weightTitle;
+    document.getElementById('weightAsk').textContent = u.weightAsk;
+    if (weightPanel.classList.contains('on')) renderWeights();
     document.getElementById('spdOut').textContent = u.speed(speed);
     document.getElementById('loadTxt').textContent = u.loading;
     document.getElementById('nwTitle').textContent = u.nwTitle;
@@ -1161,13 +1190,44 @@ function boot(){
   }
   distanceBtn.addEventListener('click', () => setDistance(!distanceMode));
 
+  // ---- "Cân nặng của em trên các thiên thể" ----
+  const weightBody = ['moon','mercury','mars','uranus','venus','earth','saturn','neptune','jupiter','sun']; // tăng dần theo trọng lực
+  const weightPanel = document.getElementById('weightPanel');
+  const weightInput = document.getElementById('weightInput');
+  function renderWeights(){
+    const kg = Math.max(0, Number(weightInput.value) || 0);
+    const fmt = n => (lang === 'vi' ? n.toFixed(1).replace('.', ',') : n.toFixed(1));
+    const list = document.getElementById('weightList');
+    list.innerHTML = '';
+    for (const id of weightBody){
+      const row = document.createElement('div'); row.className = 'wrow';
+      row.innerHTML = '<span class="dot" style="background:#' + byId[id].color.toString(16).padStart(6,'0') + ';"></span><span class="wname"></span><span class="wkg"></span>';
+      row.children[1].textContent = T().bodies[id].name;
+      row.children[2].textContent = fmt(kg * GRAV[id]) + ' kg';
+      list.appendChild(row);
+    }
+  }
+  function openWeight(){
+    stopTour();
+    document.getElementById('quizSetup').classList.remove('on');
+    document.getElementById('quizResult').classList.remove('on');
+    renderWeights();
+    weightPanel.classList.add('on');
+    if (isMobile) panel.classList.remove('open');
+  }
+  function closeWeight(){ weightPanel.classList.remove('on'); }
+  document.getElementById('weightBtn').addEventListener('click', openWeight);
+  document.getElementById('weightClose').addEventListener('click', closeWeight);
+  weightInput.addEventListener('input', renderWeights);
+
   // ---- keyboard controls (accessibility) ----
   window.addEventListener('keydown', e => {
     const tag = (e.target && e.target.tagName || '').toLowerCase();
     if (tag === 'input' || tag === 'textarea') return; // để slider/ô nhập hoạt động
     const k = e.key;
     if (k === 'Escape'){
-      if (document.getElementById('quizSetup').classList.contains('on') ||
+      if (weightPanel.classList.contains('on')) closeWeight();
+      else if (document.getElementById('quizSetup').classList.contains('on') ||
           document.getElementById('quizResult').classList.contains('on') || quizActive) closeQuiz();
       else if (touring) stopTour();
       else if (compareMode) setCompare(false);

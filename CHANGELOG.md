@@ -52,6 +52,10 @@ Dựa trên ý tưởng từ [locphamnguyen/solar-system-3d](https://github.com/
 - **Lớp sao sáng** thứ hai tạo chiều sâu cho nền vũ trụ.
 - **Vòng sáng** đánh dấu thiên thể đang chọn (luôn hướng về camera).
 
+## Phase 10 — Cân nặng trên các thiên thể
+- Nút **⚖️ Cân nặng của em**: bé nhập cân nặng → xem mình nặng bao nhiêu trên Mặt Trăng, các hành tinh và Mặt Trời (theo trọng lực bề mặt thật).
+- Danh sách xếp tăng dần theo trọng lực (nhẹ nhất → nặng nhất), cập nhật trực tiếp khi nhập, song ngữ.
+
 ## Âm thanh: nút tắt tiếng + đọc lời kể tiếng Việt chuẩn
 - **Nút 🔊/🔇 tắt-bật tiếng (master)**: mặc định **TẮT khi mở** (hết cảnh nhạc tự phát khó chịu), nhớ lựa chọn (localStorage), tắt luôn nhạc nền + hiệu ứng + lời kể.
 - **Đọc lời kể bằng file audio tiếng Việt sinh sẵn** (`assets/narration/<lang>/<id>.mp3`) → đọc giọng Việt chuẩn, **không phụ thuộc giọng của thiết bị**, chạy offline. Fallback Web Speech (chọn đúng giọng) nếu thiếu file.
