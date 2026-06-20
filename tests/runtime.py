@@ -193,6 +193,19 @@ def main():
               and "active" not in (page.get_attribute("#constBtn", "class") or ""))
         page.click("#compareBtn"); page.wait_for_timeout(300)
 
+        # Body search filter (accent-insensitive, matches vi OR en names)
+        total = page.eval_on_selector_all("#bodyList .body-row", "els=>els.length")
+        page.fill("#bodySearch", "sao hoa"); page.wait_for_timeout(200)
+        vis = page.eval_on_selector_all("#bodyList .body-row", "els=>els.filter(e=>getComputedStyle(e).display!=='none').length")
+        check("search narrows the body list", 0 < vis < total, f"{vis}/{total} visible")
+        names = page.eval_on_selector_all("#bodyList .body-row",
+            "els=>els.filter(e=>getComputedStyle(e).display!=='none').map(e=>e.textContent)")
+        check("accent-insensitive match (Sao Hỏa/Mars)",
+              any(("Hỏa" in n) or ("Mars" in n) for n in names), str(names))
+        page.fill("#bodySearch", ""); page.wait_for_timeout(200)
+        vis2 = page.eval_on_selector_all("#bodyList .body-row", "els=>els.filter(e=>getComputedStyle(e).display!=='none').length")
+        check("clearing search restores full list", vis2 == total, f"{vis2}/{total}")
+
         # Deep-link: state reflected in URL + loadable from URL
         check("URL has deep-link params", "body=" in page.url and "lang=" in page.url, page.url)
         page2 = browser.new_page(viewport={"width": 1100, "height": 700})

@@ -29,6 +29,9 @@
   .body-row:focus-visible { outline:2px solid #6f8df0; outline-offset:1px; }
   .body-row.sel { background:rgba(95,125,220,0.35); }
   .body-row.moon { margin-left:14px; font-size:11px; color:#9aa6c2; }
+  #bodySearch { width:100%; box-sizing:border-box; margin:4px 0 6px; padding:7px 9px; font-size:12px; color:#dfe6f5; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.25); border-radius:8px; font-family:inherit; }
+  #bodySearch::placeholder { color:#7a8398; }
+  #bodySearch:focus-visible { outline:2px solid #6f8df0; outline-offset:1px; }
   .dot { width:8px; height:8px; border-radius:50%; flex:none; }
   @media (max-width: 700px) {
     #menuBtn { display:block; }
@@ -161,6 +164,8 @@
     <label class="chk"><input type="checkbox" id="cbBelt" checked /><span id="uiBelt">Vành tiểu hành tinh</span></label>
     <label class="chk"><input type="checkbox" id="cbNarrate" /><span id="uiNarrate">Đọc lời kể</span></label>
     <div class="lbl-sec" id="uiBodies">THIÊN THỂ</div>
+    <input type="search" id="bodySearch" autocomplete="off" aria-label="Tìm thiên thể" placeholder="🔍 Tìm thiên thể…" />
+    <div id="bodyNoMatch" style="display:none;font-size:11px;color:#5d6680;padding:4px 6px;">—</div>
     <div id="bodyList"></div>
     <div id="hint" style="font-size:11px;color:#5d6680;margin-top:12px;line-height:1.6;padding-bottom:8px;"></div>
   </div>
@@ -302,7 +307,7 @@ const I18N = {
   vi: {
     locale:'vi-VN',
     ui:{ title:'HỆ MẶT TRỜI', simDate:'NGÀY MÔ PHỎNG', time:'ĐIỀU KHIỂN THỜI GIAN', display:'HIỂN THỊ',
-      bodies:'THIÊN THỂ', orbit:'Đường quỹ đạo', labels:'Nhãn tên', belt:'Vành tiểu hành tinh',
+      bodies:'THIÊN THỂ', searchPlaceholder:'🔍 Tìm thiên thể…', searchNoMatch:'Không tìm thấy thiên thể nào.', orbit:'Đường quỹ đạo', labels:'Nhãn tên', belt:'Vành tiểu hành tinh',
       hintDesktop:'Kéo = xoay · Lăn chuột = phóng to · Bấm = bay tới',
       hintMobile:'1 ngón = xoay · Chụm = phóng to · Chạm = bay tới',
       speed:n=>n+' ngày/giây', tourStart:'🚀 Khám phá có hướng dẫn', narrate:'Đọc lời kể',
@@ -361,7 +366,7 @@ const I18N = {
   en: {
     locale:'en-US',
     ui:{ title:'SOLAR SYSTEM', simDate:'SIMULATION DATE', time:'TIME CONTROL', display:'DISPLAY',
-      bodies:'BODIES', orbit:'Orbit lines', labels:'Labels', belt:'Asteroid belt',
+      bodies:'BODIES', searchPlaceholder:'🔍 Search bodies…', searchNoMatch:'No bodies found.', orbit:'Orbit lines', labels:'Labels', belt:'Asteroid belt',
       hintDesktop:'Drag = orbit · Scroll = zoom · Click = fly to',
       hintMobile:'1 finger = orbit · Pinch = zoom · Tap = fly to',
       speed:n=>n+' days/s', tourStart:'🚀 Guided tour', narrate:'Narration',
@@ -888,6 +893,22 @@ function boot(){
     b.label = lbl;
   }
 
+  // ---- tìm kiếm / lọc danh sách thiên thể (bỏ dấu, cả vi lẫn en) ----
+  const bodySearch = document.getElementById('bodySearch');
+  const bodyNoMatch = document.getElementById('bodyNoMatch');
+  const norm = s => (s || '').toLowerCase().replace(/đ/g, 'd').normalize('NFD').replace(/[^a-z0-9 ]/g, '');
+  function filterBodyList(){
+    const q = norm(bodySearch.value.trim());
+    let shown = 0;
+    for (const b of bodies){
+      const hit = !q || norm(I18N.vi.bodies[b.id].name).includes(q) || norm(I18N.en.bodies[b.id].name).includes(q);
+      b.row.style.display = hit ? '' : 'none';
+      if (hit) shown++;
+    }
+    bodyNoMatch.style.display = shown ? 'none' : '';
+  }
+  bodySearch.addEventListener('input', filterBodyList);
+
   // vòng sáng đánh dấu thiên thể đang chọn
   const selRing = new THREE.Mesh(new THREE.RingGeometry(1.18, 1.32, 56),
     new THREE.MeshBasicMaterial({color:0x9fc0ff, transparent:true, opacity:0.8, side:THREE.DoubleSide, depthWrite:false}));
@@ -939,6 +960,9 @@ function boot(){
     document.getElementById('uiTime').textContent = u.time;
     document.getElementById('uiDisplay').textContent = u.display;
     document.getElementById('uiBodies').textContent = u.bodies;
+    bodySearch.placeholder = u.searchPlaceholder;
+    bodySearch.setAttribute('aria-label', u.searchPlaceholder);
+    bodyNoMatch.textContent = u.searchNoMatch;
     document.getElementById('uiOrbit').textContent = u.orbit;
     document.getElementById('uiLabels').textContent = u.labels;
     document.getElementById('uiBelt').textContent = u.belt;
