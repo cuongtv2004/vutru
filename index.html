@@ -94,14 +94,19 @@
   #compareBtn { width:100%; margin:6px 0 2px; padding:8px; font-size:12px; font-weight:bold; color:#1a1430; background:linear-gradient(90deg,#b79bf0,#d4c2ff); border:none; border-radius:8px; cursor:pointer; font-family:inherit; }
   #compareBtn:hover { filter:brightness(1.08); }
   #compareBtn.active { box-shadow:0 0 0 2px #b79bf0, 0 0 12px rgba(183,155,240,0.6); }
-  #compareCap, #distanceCap { position:absolute; left:50%; bottom:calc(16px + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:40; display:none; max-width:min(92vw,560px); padding:10px 16px; font-size:12.5px; line-height:1.5; color:#ece5ff; background:rgba(8,12,24,0.92); border:1px solid rgba(183,155,240,0.45); border-radius:12px; text-align:center; }
-  #compareCap.on, #distanceCap.on { display:block; }
+  #compareCap, #distanceCap, #constCap { position:absolute; left:50%; bottom:calc(16px + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:40; display:none; max-width:min(92vw,560px); padding:10px 16px; font-size:12.5px; line-height:1.5; color:#ece5ff; background:rgba(8,12,24,0.92); border:1px solid rgba(183,155,240,0.45); border-radius:12px; text-align:center; }
+  #compareCap.on, #distanceCap.on, #constCap.on { display:block; }
   #distanceCap { color:#d6ecff; border-color:rgba(120,180,240,0.5); }
+  #constCap { color:#e2e9ff; border-color:rgba(143,166,240,0.55); }
   #distanceBtn { width:100%; margin:6px 0 2px; padding:8px; font-size:12px; font-weight:bold; color:#08182a; background:linear-gradient(90deg,#6fb3f0,#a6d4ff); border:none; border-radius:8px; cursor:pointer; font-family:inherit; }
   #distanceBtn:hover { filter:brightness(1.08); }
   #distanceBtn.active { box-shadow:0 0 0 2px #6fb3f0, 0 0 12px rgba(111,179,240,0.6); }
   #phaseBtn { width:100%; margin:6px 0 2px; padding:8px; font-size:12px; font-weight:bold; color:#1a1224; background:linear-gradient(90deg,#c9b6e6,#e8d6ff); border:none; border-radius:8px; cursor:pointer; font-family:inherit; }
   #phaseBtn:hover { filter:brightness(1.08); }
+  #constBtn { width:100%; margin:6px 0 2px; padding:8px; font-size:12px; font-weight:bold; color:#0c1430; background:linear-gradient(90deg,#8fa6f0,#c2d0ff); border:none; border-radius:8px; cursor:pointer; font-family:inherit; }
+  #constBtn:hover { filter:brightness(1.08); }
+  #constBtn.active { box-shadow:0 0 0 2px #8fa6f0, 0 0 12px rgba(143,166,240,0.6); }
+  .const-label { position:absolute; font-size:12px; font-weight:bold; color:#e6edff; text-shadow:0 0 7px rgba(110,168,224,0.95), 0 0 2px #000; transform:translate(-50%,-100%); white-space:nowrap; pointer-events:none; }
   /* Phase & eclipse mini-scene */
   #phasePanel { position:absolute; inset:0; z-index:55; display:none; align-items:center; justify-content:center; background:rgba(4,6,12,0.78); padding:12px; }
   #phasePanel.on { display:flex; }
@@ -141,6 +146,7 @@
     <button id="distanceBtn" type="button" aria-pressed="false">🛰️ Khoảng cách thật</button>
     <button id="weightBtn" type="button">⚖️ Cân nặng của em</button>
     <button id="phaseBtn" type="button">🌗 Pha &amp; Nhật/Nguyệt thực</button>
+    <button id="constBtn" type="button" aria-pressed="false">✨ Chòm sao</button>
     <div class="lbl-sec" id="uiSimDate" style="margin-top:8px;">NGÀY MÔ PHỎNG</div>
     <div id="simDate" style="font-size:13px;color:#dfe6f5;margin-bottom:10px;">—</div>
     <div class="lbl-sec" id="uiTime">ĐIỀU KHIỂN THỜI GIAN</div>
@@ -242,6 +248,7 @@
 
   <div id="compareCap"></div>
   <div id="distanceCap"></div>
+  <div id="constCap"></div>
 
   <div id="loader">
     <div class="planet-spin"></div>
@@ -316,6 +323,8 @@ const I18N = {
       shareCopied:'Đã chép liên kết! 🔗',
       distanceStart:'🛰️ Khoảng cách thật',
       distanceCap:'Khoảng cách thật từ Mặt Trời (theo AU) · Sao Hải Vương xa 30 AU, mà Eris còn xa hơn gấp đôi (68 AU)! · 🪐 Kích thước KHÔNG theo tỉ lệ.',
+      constStart:'✨ Chòm sao',
+      constCap:'Vài chòm sao quen thuộc trên bầu trời đêm — đường nối giúp em hình dung hình vẽ mà người xưa tưởng tượng. Xoay/phóng to để xem rõ từng chòm.',
       distAU:au=>au.toString().replace('.', ',')+' AU',
       loading:'Đang tải vũ trụ…',
       nwTitle:'Trình duyệt không hỗ trợ 3D',
@@ -373,6 +382,8 @@ const I18N = {
       shareCopied:'Link copied! 🔗',
       distanceStart:'🛰️ Real distances',
       distanceCap:'True distances from the Sun (in AU) · Neptune is 30 AU away, and Eris is more than twice as far (68 AU)! · 🪐 Sizes are NOT to scale.',
+      constStart:'✨ Constellations',
+      constCap:'A few familiar constellations in the night sky — the connecting lines show the figures people imagined long ago. Rotate / zoom to look at each one.',
       distAU:au=>au+' AU',
       loading:'Loading the universe…',
       nwTitle:'Your browser does not support 3D',
@@ -504,6 +515,28 @@ const QUIZ = [
 // Trọng lực bề mặt so với Trái Đất (g = 1) — để tính cân nặng của bé trên mỗi thiên thể
 const GRAV = {sun:27.0, mercury:0.38, venus:0.91, earth:1.0, moon:0.17, mars:0.38, jupiter:2.53, saturn:1.07, uranus:0.89, neptune:1.14,
   ceres:0.03, pluto:0.06, charon:0.03, haumea:0.04, makemake:0.05, eris:0.08};
+
+// ---- Chòm sao: toạ độ sao chuẩn hoá (x phải, y lên, ~ -1..1) + cạnh nối + sao sáng ----
+const CONST = [
+  {id:'orion', name:{vi:'Lạp Hộ (Orion)', en:'Orion'},
+   stars:[[-0.5,0.9],[0.5,0.95],[-0.18,0.05],[0,0],[0.18,-0.05],[-0.45,-0.9],[0.5,-0.95]],
+   edges:[[0,1],[0,2],[1,4],[2,3],[3,4],[2,5],[4,6],[5,6]], bright:[0,6]},
+  {id:'ursa', name:{vi:'Gấu Lớn (Bắc Đẩu)', en:'Ursa Major (Big Dipper)'},
+   stars:[[0.7,0.45],[0.7,0.0],[0.25,-0.05],[0.3,0.35],[-0.05,0.45],[-0.4,0.5],[-0.75,0.6]],
+   edges:[[0,1],[1,2],[2,3],[3,0],[3,4],[4,5],[5,6]], bright:[0]},
+  {id:'cassiopeia', name:{vi:'Tiên Hậu (Cassiopeia)', en:'Cassiopeia'},
+   stars:[[-0.8,-0.2],[-0.4,0.5],[0.0,-0.1],[0.4,0.5],[0.8,0.0]],
+   edges:[[0,1],[1,2],[2,3],[3,4]], bright:[]},
+  {id:'scorpius', name:{vi:'Bọ Cạp (Scorpius)', en:'Scorpius'},
+   stars:[[0.55,0.75],[0.3,0.5],[0.0,0.3],[-0.15,-0.05],[-0.1,-0.35],[0.1,-0.6],[0.45,-0.6]],
+   edges:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6]], bright:[2]},
+  {id:'leo', name:{vi:'Sư Tử (Leo)', en:'Leo'},
+   stars:[[-0.5,-0.25],[-0.6,0.1],[-0.45,0.4],[-0.6,0.65],[0.7,0.1],[0.2,-0.05]],
+   edges:[[0,1],[1,2],[2,3],[0,5],[5,4]], bright:[0]},
+  {id:'cygnus', name:{vi:'Thiên Nga (Cygnus)', en:'Cygnus (Northern Cross)'},
+   stars:[[0,0.9],[0,-0.9],[-0.75,0.0],[0.75,0.0],[0,0.0]],
+   edges:[[0,4],[4,1],[2,4],[4,3]], bright:[0]}
+];
 </script>
 
 <!-- Three.js: local first, CDN fallback -->
@@ -801,6 +834,44 @@ function boot(){
   }
   scene.add(distanceGroup);
 
+  // ---- constellation view: labeled star-charts laid out face-on (camera on +Z) ----
+  const constGroup = new THREE.Group();
+  constGroup.visible = false;
+  const constItems = [];                       // {label, names, center}
+  const CONST_COLS = 3, constCellW = 23, constCellH = 22, constStarScale = 7;
+  const constStarGeo = new THREE.SphereGeometry(0.34, 12, 10);
+  const constStarMat = new THREE.MeshBasicMaterial({color:0xfdf6d8});
+  const constBrightMat = new THREE.MeshBasicMaterial({color:0xfff0a8});
+  const constLineMat = new THREE.LineBasicMaterial({color:0x7fb0ec, transparent:true, opacity:0.7});
+  const constRows = Math.ceil(CONST.length / CONST_COLS);
+  CONST.forEach((c, idx) => {
+    const col = idx % CONST_COLS, row = Math.floor(idx / CONST_COLS);
+    const cx = (col - (CONST_COLS - 1) / 2) * constCellW;
+    const cy = ((constRows - 1) / 2 - row) * constCellH;
+    const g = new THREE.Group();
+    g.position.set(cx, cy, 0);
+    const pts = c.stars.map(([x, y]) => new THREE.Vector3(x * constStarScale, y * constStarScale, 0));
+    pts.forEach((p, i) => {
+      const isBright = c.bright && c.bright.indexOf(i) >= 0;
+      const m = new THREE.Mesh(constStarGeo, isBright ? constBrightMat : constStarMat);
+      m.position.copy(p);
+      if (isBright) m.scale.setScalar(1.8);
+      g.add(m);
+    });
+    const linePts = [];
+    c.edges.forEach(([a, b]) => { linePts.push(pts[a], pts[b]); });
+    g.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(linePts), constLineMat));
+    constGroup.add(g);
+    const lbl = document.createElement('div');
+    lbl.className = 'const-label';
+    labelLayer.appendChild(lbl);
+    const topY = Math.max.apply(null, c.stars.map(s => s[1])) * constStarScale + 2.2;
+    constItems.push({label:lbl, names:c.name, center:new THREE.Vector3(cx, cy + topY, 0)});
+  });
+  scene.add(constGroup);
+  const constSpanX = CONST_COLS * constCellW + constStarScale * 2;
+  const constSpanY = constRows * constCellH + constStarScale * 2;
+
   // ---- sidebar list + labels (keyboard-accessible buttons) ----
   const list = document.getElementById('bodyList');
   for (const b of bodies){
@@ -893,6 +964,9 @@ function boot(){
     document.getElementById('distanceBtn').textContent = u.distanceStart;
     document.getElementById('distanceCap').textContent = u.distanceCap;
     for (const c of distanceItems) if (c.label) c.label.textContent = T().bodies[c.id].name + ' · ' + u.distAU(c.au);
+    document.getElementById('constBtn').textContent = u.constStart;
+    document.getElementById('constCap').textContent = u.constCap;
+    for (const ci of constItems) ci.label.textContent = ci.names[lang];
     document.getElementById('weightBtn').textContent = u.weightStart;
     document.getElementById('weightTitle').textContent = u.weightTitle;
     document.getElementById('weightAsk').textContent = u.weightAsk;
@@ -927,6 +1001,7 @@ function boot(){
     if (typeof compareMode !== 'undefined' && compareMode) params.set('view', 'compare');
     else if (typeof distanceMode !== 'undefined' && distanceMode) params.set('view', 'distance');
     else if (typeof phaseMode !== 'undefined' && phaseMode) params.set('view', 'phase');
+    else if (typeof constMode !== 'undefined' && constMode) params.set('view', 'constellations');
     history.replaceState(null, '', location.pathname + '?' + params.toString());
   }
   document.getElementById('shareBtn').addEventListener('click', () => {
@@ -1067,7 +1142,7 @@ function boot(){
     scheduleNext(willPlay ? 15000 : 7500);
   }
   function startTour(){
-    closeQuiz(); setCompare(false); setDistance(false); closePhase();
+    closeQuiz(); setCompare(false); setDistance(false); closePhase(); closeConst();
     touring = true; tourPaused = false;
     tourBar.classList.add('on');
     tourPlayBtn.textContent = '❚❚';
@@ -1145,7 +1220,7 @@ function boot(){
     document.querySelectorAll('#countChips .chip').forEach(c => c.classList.toggle('active', +c.dataset.count === quizCount));
   }
   function openQuizSetup(){
-    stopTour(); setCompare(false); setDistance(false); closeQuiz(); closePhase();
+    stopTour(); setCompare(false); setDistance(false); closeQuiz(); closePhase(); closeConst();
     document.getElementById('quizBestLine').textContent = bestLineText();
     syncSetupUI();
     document.getElementById('quizSetup').classList.add('on');
@@ -1215,7 +1290,7 @@ function boot(){
     if (on === compareMode) return;
     compareMode = on;
     if (on){
-      stopTour(); closeQuiz(); setDistance(false); closePhase();
+      stopTour(); closeQuiz(); setDistance(false); closePhase(); closeConst();
       savedCam = {theta:camTheta, phi:camPhi, dist:targetDist};
       for (const b of bodies){ b.mesh.visible = false; if (b.orbitLine) b.orbitLine.visible = false; }
       beltGroup.visible = false;
@@ -1251,7 +1326,7 @@ function boot(){
     if (on === distanceMode) return;
     distanceMode = on;
     if (on){
-      stopTour(); closeQuiz(); setCompare(false); closePhase();
+      stopTour(); closeQuiz(); setCompare(false); closePhase(); closeConst();
       savedCamD = {theta:camTheta, phi:camPhi, dist:targetDist};
       for (const b of bodies){ b.mesh.visible = false; if (b.orbitLine) b.orbitLine.visible = false; }
       beltGroup.visible = false;
@@ -1278,6 +1353,46 @@ function boot(){
   }
   distanceBtn.addEventListener('click', () => setDistance(!distanceMode));
 
+  // ---- constellation mode toggle ----
+  let constMode = false, savedCamC = null;
+  const constBtn = document.getElementById('constBtn');
+  const constCap = document.getElementById('constCap');
+  function setConst(on){
+    if (on === constMode) return;
+    constMode = on;
+    if (on){
+      stopTour(); closeQuiz(); setCompare(false); setDistance(false); closePhase(); closeWeight();
+      savedCamC = {theta:camTheta, phi:camPhi, dist:targetDist};
+      for (const b of bodies){ b.mesh.visible = false; if (b.orbitLine) b.orbitLine.visible = false; }
+      beltGroup.visible = false;
+      constGroup.visible = true;
+      camTheta = Math.PI/2; camPhi = Math.PI/2;
+      const halfV = Math.tan(50 * Math.PI / 360);                 // camera vertical half-FOV
+      const needH = (constSpanY / 2) / halfV;
+      const needW = (constSpanX / 2) / (halfV * camera.aspect);
+      targetDist = Math.max(needH, needW) * 1.12 + 6;
+      constBtn.classList.add('active');
+      constBtn.setAttribute('aria-pressed', 'true');
+      constCap.classList.add('on');
+      ip.style.display = 'none';
+      announce(T().ui.constCap);
+      if (isMobile) panel.classList.remove('open');
+    } else {
+      if (!compareMode && !distanceMode) for (const b of bodies) b.mesh.visible = true;
+      const ob = document.getElementById('cbOrbit').checked;
+      if (!compareMode && !distanceMode){ for (const b of bodies) if (b.orbitLine) b.orbitLine.visible = ob; beltGroup.visible = document.getElementById('cbBelt').checked; }
+      constGroup.visible = false;
+      if (savedCamC){ camTheta = savedCamC.theta; camPhi = savedCamC.phi; targetDist = savedCamC.dist; }
+      constBtn.classList.remove('active');
+      constBtn.setAttribute('aria-pressed', 'false');
+      constCap.classList.remove('on');
+      ip.style.display = isMobile ? 'none' : '';
+    }
+    if (typeof updateURL === 'function') updateURL();
+  }
+  function closeConst(){ setConst(false); }
+  constBtn.addEventListener('click', () => setConst(!constMode));
+
   // ---- "Cân nặng của em trên các thiên thể" ----
   const weightBody = ['ceres','haumea','makemake','pluto','eris','moon','mercury','mars','uranus','venus','earth','saturn','neptune','jupiter','sun']; // tăng dần theo trọng lực
   const weightPanel = document.getElementById('weightPanel');
@@ -1296,7 +1411,7 @@ function boot(){
     }
   }
   function openWeight(){
-    stopTour(); closePhase();
+    stopTour(); closePhase(); closeConst();
     document.getElementById('quizSetup').classList.remove('on');
     document.getElementById('quizResult').classList.remove('on');
     renderWeights();
@@ -1408,7 +1523,7 @@ function boot(){
     if (on === phaseMode) return;
     phaseMode = on;
     if (on){
-      stopTour(); closeQuiz(); setCompare(false); setDistance(false); closeWeight();
+      stopTour(); closeQuiz(); setCompare(false); setDistance(false); closeWeight(); closeConst();
       initPhaseScene(); sizePhaseRenderer();
       if (reduceMotion) phasePlaying = false;
       syncPhasePlayBtn(); updatePhaseReadout();
@@ -1442,6 +1557,7 @@ function boot(){
       else if (touring) stopTour();
       else if (compareMode) setCompare(false);
       else if (distanceMode) setDistance(false);
+      else if (constMode) setConst(false);
       return;
     }
     let handled = true;
@@ -1462,6 +1578,7 @@ function boot(){
   if (urlParams.get('view') === 'compare') setCompare(true);
   else if (urlParams.get('view') === 'distance') setDistance(true);
   else if (urlParams.get('view') === 'phase') setPhase(true);
+  else if (urlParams.get('view') === 'constellations') setConst(true);
 
   // ---- render loop ----
   const tmp = new THREE.Vector3();
@@ -1487,7 +1604,7 @@ function boot(){
 
     if (touring && !tourPaused && !reduceMotion) camTheta -= 0.07*dt;
     camDist += (targetDist - camDist) * Math.min(1, dt*4);
-    if (compareMode) tmp.set(0,0,0);
+    if (compareMode || constMode) tmp.set(0,0,0);
     else if (distanceMode) tmp.set(distCenterX, 0, 0);
     else selected.mesh.getWorldPosition(tmp);
     camera.position.set(
@@ -1496,7 +1613,7 @@ function boot(){
       tmp.z + camDist*Math.sin(camPhi)*Math.sin(camTheta));
     camera.lookAt(tmp);
 
-    if (!compareMode && !distanceMode && selected){
+    if (!compareMode && !distanceMode && !constMode && selected){
       selected.mesh.getWorldPosition(tmp);
       selRing.position.copy(tmp);
       selRing.scale.setScalar(selected.r * 1.7);
@@ -1505,20 +1622,26 @@ function boot(){
     } else selRing.visible = false;
 
     const w = wrap.clientWidth, h = wrap.clientHeight;
-    const projLabel = (mesh, label) => {
-      mesh.getWorldPosition(tmp);
-      const v = tmp.clone().project(camera);
+    const projAt = (vec, label) => {
+      const v = vec.clone().project(camera);
       if (v.z > 1 || v.x < -1 || v.x > 1 || v.y < -1 || v.y > 1){ label.style.display = 'none'; return; }
       label.style.display = '';
       label.style.left = ((v.x+1)/2*w) + 'px';
       label.style.top = ((-v.y+1)/2*h - 10) + 'px';
     };
-    if (compareMode){
+    const projLabel = (mesh, label) => { mesh.getWorldPosition(tmp); projAt(tmp, label); };
+    if (constMode || compareMode || distanceMode){
       for (const b of bodies) b.label.style.display = 'none';
+    }
+    if (!constMode) for (const ci of constItems) ci.label.style.display = 'none';
+    if (constMode){
+      for (const c of compareItems) c.label.style.display = 'none';
+      for (const c of distanceItems) if (c.label) c.label.style.display = 'none';
+      for (const ci of constItems){ if (showLabels) projAt(ci.center, ci.label); else ci.label.style.display = 'none'; }
+    } else if (compareMode){
       for (const c of distanceItems) if (c.label) c.label.style.display = 'none';
       for (const c of compareItems){ if (showLabels) projLabel(c.mesh, c.label); else c.label.style.display = 'none'; }
     } else if (distanceMode){
-      for (const b of bodies) b.label.style.display = 'none';
       for (const c of compareItems) c.label.style.display = 'none';
       for (const c of distanceItems){ if (!c.label) continue; if (showLabels) projLabel(c.mesh, c.label); else c.label.style.display = 'none'; }
     } else {
