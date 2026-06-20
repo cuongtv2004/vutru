@@ -30,6 +30,12 @@ Dựa trên ý tưởng từ [locphamnguyen/solar-system-3d](https://github.com/
 - Mở rộng pool lên **19 câu** (thêm câu về mặt trăng & kích thước), mỗi câu gắn `cat`.
 - **Lưu điểm cao** (localStorage): hiện kỷ lục ở màn setup và màn kết quả, báo "🎉 Kỷ lục mới!" khi phá kỷ lục.
 
+## Phase 7 — Accessibility
+- **Điều khiển bằng bàn phím**: phím mũi tên xoay camera, `+`/`-` phóng to/thu nhỏ, `Esc` thoát tour/quiz/so-sánh.
+- Tôn trọng **`prefers-reduced-motion`**: tắt confetti và tự-xoay (camera/hành tinh/vành đai) cho bé dễ say chuyển động.
+- **Screen reader**: vùng `aria-live` đọc tên thiên thể, câu hỏi & kết quả quiz; canvas có `role`/`aria-label`.
+- `aria-pressed` cho các nút bật/tắt (nhạc, so sánh, chạy/dừng, tạm dừng tour); `aria-current` cho thiên thể đang chọn; viền focus rõ ràng.
+
 ## Hạ tầng
 - **Test harness** `tests/runtime.py` (Playwright + Chromium headless) + CI GitHub Actions:
   bắt lỗi JS và kiểm thử tour/quiz/so-sánh/i18n trên mỗi PR.

@@ -87,6 +87,9 @@
   #compareBtn.active { box-shadow:0 0 0 2px #b79bf0, 0 0 12px rgba(183,155,240,0.6); }
   #compareCap { position:absolute; left:50%; bottom:calc(16px + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:40; display:none; max-width:min(92vw,560px); padding:10px 16px; font-size:12.5px; line-height:1.5; color:#ece5ff; background:rgba(8,12,24,0.92); border:1px solid rgba(183,155,240,0.45); border-radius:12px; text-align:center; }
   #compareCap.on { display:block; }
+  /* Accessibility */
+  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+  button:focus-visible, [tabindex]:focus-visible, input:focus-visible { outline:3px solid #ffd877; outline-offset:2px; }
 </style>
 </head>
 <body>
@@ -94,18 +97,19 @@
 <audio id="bgm" src="assets/audio.mp3" loop preload="auto"></audio>
 
 <div id="wrap">
-  <canvas id="space"></canvas>
+  <canvas id="space" tabindex="0" role="application" aria-label="Mô hình 3D hệ mặt trời — dùng phím mũi tên để xoay, +/- để phóng to"></canvas>
   <div id="labels"></div>
+  <div id="srLive" class="sr-only" aria-live="polite"></div>
 
   <button id="menuBtn" class="corner-btn" aria-label="Mở danh sách thiên thể">☰</button>
   <button id="langBtn" class="corner-btn" aria-label="Đổi ngôn ngữ">EN</button>
-  <button id="musicBtn" class="corner-btn" aria-label="Bật/tắt nhạc nền">♪</button>
+  <button id="musicBtn" class="corner-btn" aria-label="Bật/tắt nhạc nền" aria-pressed="false">♪</button>
 
   <div id="panel">
     <div id="uiTitle" style="font-size:13px;font-weight:bold;color:#dfe6f5;letter-spacing:1px;">HỆ MẶT TRỜI</div>
     <button id="tourStartBtn" type="button">🚀 Khám phá có hướng dẫn</button>
     <button id="quizStartBtn" type="button">🎯 Đố vui</button>
-    <button id="compareBtn" type="button">📏 So sánh kích thước</button>
+    <button id="compareBtn" type="button" aria-pressed="false">📏 So sánh kích thước</button>
     <div class="lbl-sec" id="uiSimDate" style="margin-top:8px;">NGÀY MÔ PHỎNG</div>
     <div id="simDate" style="font-size:13px;color:#dfe6f5;margin-bottom:10px;">—</div>
     <div class="lbl-sec" id="uiTime">ĐIỀU KHIỂN THỜI GIAN</div>
@@ -440,6 +444,9 @@ function boot(){
 
   const mqMobile = window.matchMedia('(max-width: 700px)');
   let isMobile = mqMobile.matches;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const srLive = document.getElementById('srLive');
+  function announce(msg){ if (srLive) srLive.textContent = msg; }
   const panel = document.getElementById('panel');
   const ip = document.getElementById('infoPanel');
   const menuBtn = document.getElementById('menuBtn');
@@ -463,6 +470,7 @@ function boot(){
     musicOn = on;
     musicBtn.style.opacity = on ? '1' : '0.45';
     musicBtn.style.textDecoration = on ? 'none' : 'line-through';
+    musicBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
     if (on) bgm.play().catch(()=>{ musicOn = false; musicBtn.style.opacity = '0.45'; });
     else bgm.pause();
   }
@@ -645,11 +653,13 @@ function boot(){
   const startDate = new Date();
 
   function selectBody(b){
-    if (selected) selected.row.classList.remove('sel');
+    if (selected){ selected.row.classList.remove('sel'); selected.row.removeAttribute('aria-current'); }
     selected = b;
     b.row.classList.add('sel');
+    b.row.setAttribute('aria-current', 'true');
     targetDist = b.fly;
     const info = T().bodies[b.id];
+    announce(info.name);
     document.getElementById('ipName').textContent = info.name;
     document.getElementById('ipDesc').textContent = info.desc || '';
     const funEl = document.getElementById('ipFun');
@@ -775,6 +785,8 @@ function boot(){
     const btn = document.getElementById('playBtn');
     btn.textContent = playing ? '❚❚' : '▶';
     btn.style.fontSize = playing ? '11px' : '13px';
+    btn.setAttribute('aria-pressed', playing ? 'false' : 'true');
+    btn.setAttribute('aria-label', playing ? 'Tạm dừng' : 'Chạy');
   });
   document.getElementById('cbOrbit').addEventListener('change', e => { for (const b of bodies) if (b.orbitLine) b.orbitLine.visible = e.target.checked; });
   document.getElementById('cbLabel').addEventListener('change', e => { showLabels = e.target.checked; });
@@ -840,6 +852,7 @@ function boot(){
     if (!touring) return;
     tourPaused = !tourPaused;
     tourPlayBtn.textContent = tourPaused ? '▶' : '❚❚';
+    tourPlayBtn.setAttribute('aria-pressed', tourPaused ? 'true' : 'false');
     if (tourPaused){ clearTourTimer(); if (window.speechSynthesis) speechSynthesis.cancel(); }
     else tourGo(tourIdx);
   }
@@ -864,6 +877,7 @@ function boot(){
     } catch(e){}
   }
   function confetti(){
+    if (reduceMotion) return;
     const em = ['✨','🌟','⭐','🎉','💫'];
     for (let i=0;i<24;i++){
       const s = document.createElement('div');
@@ -884,6 +898,7 @@ function boot(){
     document.getElementById('quizQ').textContent = quizSet[quizIdx].q[lang];
     document.getElementById('quizFb').textContent = '';
     updateQuizMeta();
+    announce(quizSet[quizIdx].q[lang]);
   }
   let quizTopic = 'all', quizCount = 6;
   const QUIZ_BEST_KEY = 'ssQuizBest';
@@ -920,6 +935,7 @@ function boot(){
     const fb = document.getElementById('quizFb');
     fb.textContent = correct ? T().ui.quizCorrect : T().ui.quizWrong;
     fb.style.color = correct ? '#7ee08a' : '#f6896a';
+    announce(fb.textContent);
     if (correct){ score++; confetti(); blip(true); }
     else { blip(false); selectBody(byId[quizSet[quizIdx].answer]); }
     updateQuizMeta();
@@ -973,8 +989,10 @@ function boot(){
       compareGroup.visible = true;
       camTheta = Math.PI/2; camPhi = Math.PI/2 - 0.12; targetDist = compareWidth * 0.62 + 6;
       compareBtn.classList.add('active');
+      compareBtn.setAttribute('aria-pressed', 'true');
       compareCap.classList.add('on');
       ip.style.display = 'none';
+      announce(T().ui.compareCap);
       if (isMobile) panel.classList.remove('open');
     } else {
       for (const b of bodies) b.mesh.visible = true;
@@ -984,11 +1002,36 @@ function boot(){
       compareGroup.visible = false;
       if (savedCam){ camTheta = savedCam.theta; camPhi = savedCam.phi; targetDist = savedCam.dist; }
       compareBtn.classList.remove('active');
+      compareBtn.setAttribute('aria-pressed', 'false');
       compareCap.classList.remove('on');
       ip.style.display = isMobile ? 'none' : '';
     }
   }
   compareBtn.addEventListener('click', () => setCompare(!compareMode));
+
+  // ---- keyboard controls (accessibility) ----
+  window.addEventListener('keydown', e => {
+    const tag = (e.target && e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea') return; // để slider/ô nhập hoạt động
+    const k = e.key;
+    if (k === 'Escape'){
+      if (document.getElementById('quizSetup').classList.contains('on') ||
+          document.getElementById('quizResult').classList.contains('on') || quizActive) closeQuiz();
+      else if (touring) stopTour();
+      else if (compareMode) setCompare(false);
+      return;
+    }
+    let handled = true;
+    const minD = (selected ? selected.r : 9) * 2.5;
+    if (k === 'ArrowLeft') camTheta -= 0.12;
+    else if (k === 'ArrowRight') camTheta += 0.12;
+    else if (k === 'ArrowUp') camPhi = Math.max(0.15, camPhi - 0.1);
+    else if (k === 'ArrowDown') camPhi = Math.min(Math.PI - 0.15, camPhi + 0.1);
+    else if (k === '+' || k === '=') targetDist = Math.max(minD, targetDist * 0.88);
+    else if (k === '-' || k === '_') targetDist = Math.min(600, targetDist * 1.14);
+    else handled = false;
+    if (handled) e.preventDefault();
+  });
 
   applyLang();
   selectBody(byId.sun);
@@ -1010,10 +1053,12 @@ function boot(){
       const d = new Date(startDate.getTime() + days*86400000);
       document.getElementById('simDate').textContent = d.toLocaleDateString(T().locale, {month:'short', day:'numeric', year:'numeric'});
     }
-    for (const b of bodies) b.mesh.rotation.y += 0.3*dt;
-    if (compareMode) for (const c of compareItems) c.mesh.rotation.y += 0.2*dt;
+    if (!reduceMotion){
+      for (const b of bodies) b.mesh.rotation.y += 0.3*dt;
+      if (compareMode) for (const c of compareItems) c.mesh.rotation.y += 0.2*dt;
+    }
 
-    if (touring && !tourPaused) camTheta -= 0.07*dt;
+    if (touring && !tourPaused && !reduceMotion) camTheta -= 0.07*dt;
     camDist += (targetDist - camDist) * Math.min(1, dt*4);
     if (compareMode) tmp.set(0,0,0); else selected.mesh.getWorldPosition(tmp);
     camera.position.set(

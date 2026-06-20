@@ -66,8 +66,10 @@ def main():
         page.click("#compareBtn"); page.wait_for_timeout(900)
         check("compare caption on", "on" in (page.get_attribute("#compareCap", "class") or ""))
         check("compare button active", "active" in (page.get_attribute("#compareBtn", "class") or ""))
+        check("compare aria-pressed true", page.get_attribute("#compareBtn", "aria-pressed") == "true")
         page.click("#compareBtn"); page.wait_for_timeout(500)
         check("compare exits cleanly", "on" not in (page.get_attribute("#compareCap", "class") or ""))
+        check("compare aria-pressed false", page.get_attribute("#compareBtn", "aria-pressed") == "false")
 
         # Tour
         page.click("#tourStartBtn"); page.wait_for_timeout(800)
@@ -100,6 +102,14 @@ def main():
         check("quiz reaches result", "on" in (page.get_attribute("#quizResult", "class") or ""))
         check("high score line shown", len((page.text_content("#quizRecord") or "").strip()) > 0)
         page.click("#quizClose"); page.wait_for_timeout(300)
+
+        # Accessibility
+        check("canvas is focusable application", page.get_attribute("#space", "role") == "application"
+              and page.get_attribute("#space", "tabindex") == "0")
+        check("live region announces", len((page.text_content("#srLive") or "").strip()) > 0)
+        page.click("#quizStartBtn"); page.wait_for_timeout(300)
+        page.keyboard.press("Escape"); page.wait_for_timeout(300)
+        check("Escape closes overlay", "on" not in (page.get_attribute("#quizSetup", "class") or ""))
 
         # i18n toggle
         before = page.text_content("#uiTitle")
