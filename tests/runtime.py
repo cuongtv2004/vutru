@@ -140,6 +140,16 @@ def main():
         check("vi narration audio file served", r.status == 200, f"status {r.status}")
         page.uncheck("#cbNarrate"); page.click("#musicBtn"); page.wait_for_timeout(150)
 
+        # Weight-on-planets calculator
+        page.click("#weightBtn"); page.wait_for_timeout(300)
+        check("weight panel opens", "on" in (page.get_attribute("#weightPanel", "class") or ""))
+        page.fill("#weightInput", "100"); page.wait_for_timeout(200)
+        rows = page.eval_on_selector_all("#weightList .wrow", "els=>els.length")
+        check("weight list populated", rows >= 8, f"{rows} rows")
+        wtxt = page.text_content("#weightList") or ""
+        check("weight computed (100kg -> Sun 2700)", "2700" in wtxt, wtxt[:60])
+        page.click("#weightClose"); page.wait_for_timeout(150)
+
         # Deep-link: state reflected in URL + loadable from URL
         check("URL has deep-link params", "body=" in page.url and "lang=" in page.url, page.url)
         page2 = browser.new_page(viewport={"width": 1100, "height": 700})
